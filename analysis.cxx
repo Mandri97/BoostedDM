@@ -127,7 +127,7 @@ void analyzeRootFile(string rootFile){
     tree->SetBranchAddress("PSD",  &t_PSD);
     tree->SetBranchAddress("E",    &t_energy);
     tree->SetBranchAddress("z",    &t_height);
-    tree->SetBranchAddress("time", &t_time);
+    tree->SetBranchAddress("t",    &t_time);
 
     long int nentries = tree->GetEntries();
 
