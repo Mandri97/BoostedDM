@@ -112,13 +112,13 @@ void analyzeRootFile(string rootFile){
     auto tree = (TTree*)_file->Get("PhysPulse");
 
     /* Declare variables for branches */
-    long int t_event;           // Keep track of events
+    Long64_t t_event;           // Keep track of events
     int      t_PID,             // PID
              t_segment;         // segment 
     float    t_PSD,             // Pulse Shape Discrimination parameter
              t_energy,          // Energy in [MeV]
-             t_height,          // width in the segment in [mm]
-             t_time;            // absolute time [ns]
+             t_height;          // width in the segment in [mm]
+    double   t_time;            // absolute time [ns]
 
     /* Set branch address */
     tree->SetBranchAddress("evt",  &t_event);
@@ -593,12 +593,18 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     if (iPrev == -1){
         prevCorrelated = true;
     } else {
+
+        bool foundRequiredPulse = false;
+
         for (; iPrev >= 0; iPrev--){
+
+            if (foundRequiredPulse) break;
+
             Event *temp = allEvents->getEvent(iPrev);
 
             // n-pulses
             if (temp->isSinglePulse() == 0){
-                for (int iPulse = 0, j = temp->getNumberOfPulses(); iPulse < j; iPulse++){
+                for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
                     Pulse_t *pulse = temp->getPulse(iPulse);
                     
                     if (timeWindow(event->getPulse(0), pulse) < time){
@@ -607,10 +613,13 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                         if (event->getPulse(0)->segment == pulse->segment){
                             prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
+                            foundRequiredPulse = true;
+
                             break;
                         }
                     } else {
-                         prevCorrelated = true;
+                        prevCorrelated = true;
+                        foundRequiredPulse = true;
 
                         break;
                     }
