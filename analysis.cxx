@@ -17,6 +17,9 @@
 #define MIN_ENERGY 0
 #define MAX_ENERGY 10
 
+#define NBIN_SEGMENT 154
+#define MIN_SEGMENT 0
+#define MAX_SEGMENT 154
 
 using namespace std;
 
@@ -72,6 +75,10 @@ auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 30 cm & - 750 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+
+// count
+auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hist_liveSegment_Segment_z_DoubleFV = new TH1F("hist_liveSegment_Segment_z_DoubleFV", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
 /* }}} */
 
@@ -132,13 +139,20 @@ void analyzeRootFile(string rootFile){
     long int nentries = tree->GetEntries();
 
     // memory for event
-    long int lastEventID = 0;
+    Long64_t lastEventID = 0;
 
     Event oneEvent;
 
     // Loop over all events -- Store
     for (long int ientry = 0; ientry < nentries; ientry++){
         tree->GetEntry(ientry);
+
+        // Skip (pretended) dead segment
+        switch(t_segment){
+            case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
+                continue;
+                break;
+        }
 
         // determine if a pulse belong to an event
         bool sameEvent = false;
@@ -148,7 +162,7 @@ void analyzeRootFile(string rootFile){
             sameEvent = true;
         }else{
             sameEvent = lastEventID == t_event;
-            lastEventID = ientry;
+            lastEventID = t_event;
         }
 
         // Store the previous event
@@ -169,11 +183,17 @@ void analyzeRootFile(string rootFile){
         pulse.segment = t_segment;
 
         oneEvent.addPulse(pulse);
+
+        hist_liveSegment->Fill(t_segment);
     }
+
+    events->addEvent(oneEvent);
 
     totalRunTime += t_time;
 
     CutEvents(events);
+
+    delete events; 
 
     _file->Close();
 }
@@ -193,7 +213,7 @@ void analysis(char* filename){ // {{{
     // Consider root file separately
     while (textFile >> oneRootFile) analyzeRootFile(oneRootFile);
 
-    auto outFile = new TFile("analysis.root", "write");
+    auto outFile = new TFile("analysis.root", "recreate");
 
     // Save histogram
     hist_Signal->Write();
@@ -207,11 +227,16 @@ void analysis(char* filename){ // {{{
     hist_Signal_NLiCaptureAdjacent_time400->Write();
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
 
+    hist_liveSegment->Write();
+    hist_liveSegment_Segment_z_DoubleFV->Write();
+
     outFile->Close();
+
+    totalRunTime = (totalRunTime - 18419.3) * 1e-9;
 
     cout << "Analysis finished.\n\n";
     cout << "**********************\n";
-    cout << "Total running time: " << totalRunTime * 1e-9 << " s\n";
+    cout << "Total running time: " << totalRunTime << " s\n";
 
 } //}}}
 
@@ -235,6 +260,8 @@ void CutEvents (Events *events){ // {{{
             // Segment and z double fiducial cuts
             if (doubleFiducialCut(event->getPulse(0)->segment) && abs(event->getPulse(0)->height) < 200){
                 hist_Signal_Segmet_z_DoubleFV->Fill(energyEvent);
+
+                hist_liveSegment_Segment_z_DoubleFV->Fill(event->getPulse(0)->segment);
 
                 // Muon adjacent veto within 5 us
                 if (muonAdjacent(iEvent, events, 5)){
@@ -539,6 +566,8 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     bool prevCorrelated = true;
 
     bool foundRequiredPulse = false;
+
+    cout << iCurrentEvent << "/" << allEvents->getNumberOfEvents() << endl;
 
     for (; iPrev >= 0; iPrev--){
 
