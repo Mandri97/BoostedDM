@@ -193,6 +193,8 @@ void analysis(char* filename){ // {{{
     // Consider root file separately
     while (textFile >> oneRootFile) analyzeRootFile(oneRootFile);
 
+    auto outFile = new TFile("analysis.root", "write");
+
     // Save histogram
     hist_Signal->Write();
     hist_EnergyPerEvent->Write();
@@ -204,6 +206,8 @@ void analysis(char* filename){ // {{{
     hist_Signal_BiPoCorrelatedDecay->Write();
     hist_Signal_NLiCaptureAdjacent_time400->Write();
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
+
+    outFile->Close();
 
     cout << "Analysis finished.\n\n";
     cout << "**********************\n";
