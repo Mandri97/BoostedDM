@@ -307,7 +307,7 @@ bool neutronAdjacent (int iCurrentEvent, Events *allEvents, int PID, float time)
     // Current pulses
     Event *event = allEvents->getEvent(iCurrentEvent);
 
-    bool prevNeutronAdjacent = false;
+    bool prevNeutronAdjacent = true;
     
     long int iPrev = iCurrentEvent - 1;
 
@@ -346,12 +346,9 @@ bool neutronAdjacent (int iCurrentEvent, Events *allEvents, int PID, float time)
                 break;
             }
         }
-
-        // no neutron adjacent found
-        prevNeutronAdjacent = true;
     }
 
-    bool nextNeutronAdjacent = false;
+    bool nextNeutronAdjacent = true;
 
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
@@ -389,9 +386,6 @@ bool neutronAdjacent (int iCurrentEvent, Events *allEvents, int PID, float time)
                 break;
             }
         }
-
-        // no neutron adjacent found
-        nextNeutronAdjacent = true; 
     }
     
     return prevNeutronAdjacent && nextNeutronAdjacent;
@@ -414,7 +408,7 @@ bool muonAdjacent (int iCurrentEvent, Events *allEvents, float time){ // {{{
     // Current pulses
     Event *event = allEvents->getEvent(iCurrentEvent);
 
-    bool prevMuonAdjacent = false;
+    bool prevMuonAdjacent = true;
     
     long int iPrev = iCurrentEvent - 1;
 
@@ -434,12 +428,9 @@ bool muonAdjacent (int iCurrentEvent, Events *allEvents, float time){ // {{{
                 break;
             }
         }
-
-        // No muon adjacent
-        prevMuonAdjacent = true;
     }
 
-    bool nextMuonAdjacent = false;
+    bool nextMuonAdjacent = true;
 
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
@@ -460,9 +451,6 @@ bool muonAdjacent (int iCurrentEvent, Events *allEvents, float time){ // {{{
                 break;
             }
         }
-
-        // No muon adjacent
-        nextMuonAdjacent = true;
     }
 
     return prevMuonAdjacent && nextMuonAdjacent;
@@ -517,7 +505,7 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
     
     long int iPrev = iCurrentEvent - 1;
 
-    bool prevCorrelated = false;
+    bool prevCorrelated = true;
 
     if (iPrev == -1){
         prevCorrelated = true;
@@ -542,14 +530,12 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
                 }
             } 
         }
-
-        prevCorrelated = true;
     }
 
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
 
-    bool nextCorrelated = false;
+    bool nextCorrelated = true;
 
     if (iNext == iMax){
         prevCorrelated = true;
@@ -574,8 +560,6 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
                 }
             }
         }
-
-        nextCorrelated = true;
     }
 
     return prevCorrelated && nextCorrelated;
@@ -588,7 +572,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     
     long int iPrev = iCurrentEvent - 1;
 
-    bool prevCorrelated = false;
+    bool prevCorrelated = true;
 
     if (iPrev == -1){
         prevCorrelated = true;
@@ -626,8 +610,6 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                 }
             } 
         }
-
-        prevCorrelated = true;
     }
 
     return prevCorrelated;
@@ -635,7 +617,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
 
-    bool nextCorrelated = false;
+    bool nextCorrelated = true;
 
     if (iNext == iMax){
         prevCorrelated = true;
@@ -666,8 +648,6 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                 }
             }        
         }
-
-        nextCorrelated = true;
     }
 
     return prevCorrelated && nextCorrelated;
