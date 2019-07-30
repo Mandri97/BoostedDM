@@ -311,40 +311,36 @@ bool neutronAdjacent (int iCurrentEvent, Events *allEvents, int PID, float time)
     
     long int iPrev = iCurrentEvent - 1;
 
-    if (iPrev == -1)
-        prevNeutronAdjacent = true;
-    else{
-        for ( ; iPrev >= 0; iPrev--){
-            
-            Event *temp = allEvents->getEvent(iPrev);
+    for ( ; iPrev >= 0; iPrev--){
+        
+        Event *temp = allEvents->getEvent(iPrev);
 
-            // PID requirement
-            if (PID == 4){
+        // PID requirement
+        if (PID == 4){
 
-                // Looking for event containing neutron recoil
-                if (temp->isContainingNeutronRecoil()){
-                    prevNeutronAdjacent = timeWindow(event->getPulse(0),
-                        temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
-
-                    break;
-                }
-
-            }else if (PID == 6){
-
-                // Looking for event containing nLi capture
-                if (temp->isContainingNLiCapture()){
-                    prevNeutronAdjacent = timeWindow(event->getPulse(0),
-                        temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
-
-                    break;
-                }
-
-            } else {
+            // Looking for event containing neutron recoil
+            if (temp->isContainingNeutronRecoil()){
                 prevNeutronAdjacent = timeWindow(event->getPulse(0),
                     temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
                 break;
             }
+
+        } else if (PID == 6){
+
+            // Looking for event containing nLi capture
+            if (temp->isContainingNLiCapture()){
+                prevNeutronAdjacent = timeWindow(event->getPulse(0),
+                    temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
+
+                break;
+            }
+
+        } else {
+            prevNeutronAdjacent = timeWindow(event->getPulse(0),
+                temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
+
+            break;
         }
     }
 
@@ -353,38 +349,34 @@ bool neutronAdjacent (int iCurrentEvent, Events *allEvents, int PID, float time)
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
 
-    if (iNext == iMax)
-        nextNeutronAdjacent = true;
-    else{
-        for ( ; iNext < iMax; iNext++){
-            
-            Event *temp = allEvents->getEvent(iNext);
+    for ( ; iNext < iMax; iNext++){
+        
+        Event *temp = allEvents->getEvent(iNext);
 
-            // PID requirement
-            if (PID == 4){
+        // PID requirement
+        if (PID == 4){
 
-                // Looking for event containing neutron recoil
-                if (temp->isContainingNeutronRecoil()){
-                    nextNeutronAdjacent = timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
-
-                    break;
-                }
-
-            }else if (PID == 6){
-
-                // Looking for event containing nLi capture
-                if (temp->isContainingNLiCapture()){
-                    nextNeutronAdjacent = timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
-
-                    break;
-                }
-
-            } else {
-                nextNeutronAdjacent = timeWindow(event->getPulse(0),
-                    temp->getPulse(0)) > time;
+            // Looking for event containing neutron recoil
+            if (temp->isContainingNeutronRecoil()){
+                nextNeutronAdjacent = timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
 
                 break;
             }
+
+        }else if (PID == 6){
+
+            // Looking for event containing nLi capture
+            if (temp->isContainingNLiCapture()){
+                nextNeutronAdjacent = timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
+
+                break;
+            }
+
+        } else {
+            nextNeutronAdjacent = timeWindow(event->getPulse(0),
+                temp->getPulse(0)) > time;
+
+            break;
         }
     }
     
@@ -412,21 +404,17 @@ bool muonAdjacent (int iCurrentEvent, Events *allEvents, float time){ // {{{
     
     long int iPrev = iCurrentEvent - 1;
 
-    if (iPrev == -1)
-        prevMuonAdjacent = true;
-    else{
-        for ( ; iPrev >= 0; iPrev--){
-            
-            Event *temp = allEvents->getEvent(iPrev);
+    for ( ; iPrev >= 0; iPrev--){
+        
+        Event *temp = allEvents->getEvent(iPrev);
 
-            // Energy requirement
-            if (temp->getEnergyEvent() > 15){
+        // Energy requirement
+        if (temp->getEnergyEvent() > 15){
 
-                prevMuonAdjacent =
-                    timeWindow(event->getPulse(0), temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
+            prevMuonAdjacent =
+                timeWindow(event->getPulse(0), temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
-                break;
-            }
+            break;
         }
     }
 
@@ -435,21 +423,17 @@ bool muonAdjacent (int iCurrentEvent, Events *allEvents, float time){ // {{{
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
 
-    if (iNext == iMax)
-        nextMuonAdjacent = true;
-    else{
-        for ( ; iNext < iMax; iNext++){
+    for ( ; iNext < iMax; iNext++){
 
-            Event *temp = allEvents->getEvent(iNext);
+        Event *temp = allEvents->getEvent(iNext);
 
-            // Energy requirement
-            if (temp->getEnergyEvent() > 15){
+        // Energy requirement
+        if (temp->getEnergyEvent() > 15){
 
-                prevMuonAdjacent =
-                    timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
+            nextMuonAdjacent =
+                timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
 
-                break;
-            }
+            break;
         }
     }
 
@@ -473,11 +457,9 @@ bool pileUp (int iCurrentEvent, Events *allEvents, float time){
     
     long int iPrev = iCurrentEvent - 1;
 
-    bool prevPileUp = false;
+    bool prevPileUp = true;
 
-    if (iPrev == -1)
-        prevPileUp = true;
-    else {
+    if (iPrev > -1){
         Event *temp = allEvents->getEvent(iPrev);
 
         prevPileUp = timeWindow(event->getPulse(0), temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
@@ -485,11 +467,9 @@ bool pileUp (int iCurrentEvent, Events *allEvents, float time){
 
     long int iNext = iCurrentEvent + 1;
 
-    bool nextPileUp = false;
+    bool nextPileUp = true;
 
-    if (iNext == allEvents->getNumberOfEvents())
-        nextPileUp = true;
-    else {
+    if (iNext < allEvents->getNumberOfEvents()){
         Event *temp = allEvents->getEvent(iNext);
 
         nextPileUp = timeWindow(event->getPulse(0), temp->getPulse(0)) > time;
@@ -507,29 +487,21 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
 
     bool prevCorrelated = true;
 
-    if (iPrev == -1){
-        prevCorrelated = true;
-    }else{
-        for (; iPrev >= 0; iPrev--){
-            Event *temp = allEvents->getEvent(iPrev);
+    for (; iPrev >= 0; iPrev--){
+        Event *temp = allEvents->getEvent(iPrev);
 
-            // single pulse neutron recoil
-            if (temp->isSinglePulse() == 4){
-                if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
+        // single pulse neutron recoil
+        if (temp->isSinglePulse() == 4){
+            if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
 
-                    // same height and same segment
-                    if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
-                          prevCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
+                // same height and same segment
+                if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
+                      prevCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
 
-                          break;
-                    } 
-                } else {
-                    prevCorrelated = true;
-
-                    break;
-                }
-            } 
-        }
+                      break;
+                } 
+            } else break;
+        } 
     }
 
     long int iNext = iCurrentEvent + 1,
@@ -537,28 +509,20 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
 
     bool nextCorrelated = true;
 
-    if (iNext == iMax){
-        prevCorrelated = true;
-    }else{
-        for (; iNext < iMax; iNext++){
-            Event *temp = allEvents->getEvent(iNext);
+    for (; iNext < iMax; iNext++){
+        Event *temp = allEvents->getEvent(iNext);
 
-            // single pulse neutron recoil
-            if (temp->isSinglePulse() == 4){
-                if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
+        // single pulse neutron recoil
+        if (temp->isSinglePulse() == 4){
+            if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
 
-                    // same height and same segment
-                    if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
-                          nextCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
+                // same height and same segment
+                if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
+                      nextCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
 
-                          break;
-                    } 
-                } else {
-                    nextCorrelated = true;
-
-                    break;
-                }
-            }
+                      break;
+                } 
+            } else break;
         }
     }
 
@@ -574,45 +538,42 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
 
     bool prevCorrelated = true;
 
-    if (iPrev == -1){
-        prevCorrelated = true;
-    } else {
+    bool foundRequiredPulse = false;
 
-        bool foundRequiredPulse = false;
+    for (; iPrev >= 0; iPrev--){
 
-        for (; iPrev >= 0; iPrev--){
+        if (foundRequiredPulse) break;
 
-            if (foundRequiredPulse) break;
+        Event *temp = allEvents->getEvent(iPrev);
 
-            Event *temp = allEvents->getEvent(iPrev);
+        // n-pulses
+        if (temp->isSinglePulse() == 0){
+            cout << temp->getNumberOfPulses() << endl;
+            for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
+                Pulse_t *pulse = temp->getPulse(iPulse);
+                
+                if (timeWindow(event->getPulse(0), pulse) < time){
 
-            // n-pulses
-            if (temp->isSinglePulse() == 0){
-                for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
-                    Pulse_t *pulse = temp->getPulse(iPulse);
-                    
-                    if (timeWindow(event->getPulse(0), pulse) < time){
+                    // same height and same segment
+                    if (event->getPulse(0)->segment == pulse->segment){
+                        prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
-                        // same height and same segment
-                        if (event->getPulse(0)->segment == pulse->segment){
-                            prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
-
-                            foundRequiredPulse = true;
-
-                            break;
-                        }
-                    } else {
-                        prevCorrelated = true;
                         foundRequiredPulse = true;
 
                         break;
                     }
+                } else {
+                    foundRequiredPulse = true;
+
+                    break;
                 }
-            } 
-        }
+            }
+        } 
     }
 
     return prevCorrelated;
+
+    // TODO: Need to modify this if you want to include pulse before signal
 
     long int iNext = iCurrentEvent + 1,
              iMax  = allEvents->getNumberOfEvents();
