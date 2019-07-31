@@ -13,7 +13,7 @@
 #include "event.hh"
 
 
-#define NBIN_ENERGY 400
+#define NBIN_ENERGY 200
 #define MIN_ENERGY 0
 #define MAX_ENERGY 10
 
@@ -567,8 +567,6 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
 
     bool foundRequiredPulse = false;
 
-    cout << iCurrentEvent << "/" << allEvents->getNumberOfEvents() << endl;
-
     for (; iPrev >= 0; iPrev--){
 
         if (foundRequiredPulse) break;
@@ -577,7 +575,6 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
 
         // n-pulses
         if (temp->isSinglePulse() == 0){
-            cout << temp->getNumberOfPulses() << endl;
             for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
                 Pulse_t *pulse = temp->getPulse(iPulse);
                 
