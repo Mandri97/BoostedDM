@@ -53,6 +53,8 @@ int Event::isSinglePulse(){
      *      - PID -- otherwise
      */
 
+    assert (this->getNumberOfPulses() > 0);
+
     if (this->getNumberOfPulses() > 1) return 0;
     else return pulses.at(0).PID;
 }
