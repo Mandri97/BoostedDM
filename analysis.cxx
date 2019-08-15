@@ -147,10 +147,11 @@ void analyzeRootFile(string rootFile){
     for (long int ientry = 0; ientry < nentries; ientry++){
         tree->GetEntry(ientry);
 
-        // Skip (pretended) dead segment
+        // Skip (pretended) dead segments
         switch(t_segment){
             case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
                 continue;
+
                 break;
         }
 
@@ -288,14 +289,10 @@ void CutEvents (Events *events){ // {{{
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                     }
                                 }
-
-
                             }
-
                         }
                     }
                 }
-
             }
         }
     }
@@ -528,7 +525,7 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
                       break;
                 } 
             } else break;
-        } 
+        }
     }
 
     long int iNext = iCurrentEvent + 1,
@@ -563,12 +560,10 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     
     long int iPrev = iCurrentEvent - 1;
 
-    bool prevCorrelated = true;
-
-    bool foundRequiredPulse = false;
+    bool prevCorrelated = true,
+         foundRequiredPulse = false;
 
     for (; iPrev >= 0; iPrev--){
-
         if (foundRequiredPulse) break;
 
         Event *temp = allEvents->getEvent(iPrev);
@@ -581,7 +576,10 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                 if (timeWindow(event->getPulse(0), pulse) < time){
 
                     // same height and same segment
-                    if (event->getPulse(0)->segment == pulse->segment){
+		    // TODO: Change 15 August not same segment but +-1 segment
+                    if (event->getPulse(0)->segment == pulse->segment ||
+			event->getPulse(0)->segment == pulse->segment - 1 ||
+			event->getPulse(0)->segment == pulse->segment + 1){
                         prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
                         foundRequiredPulse = true;
