@@ -580,18 +580,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                     // At this point, worrying about the corner of the detector is not
                     // a priority since they are already cuted (double semengt cuts)
                     
-                    if (event->getPulse(0)->segment == pulse->segment ||
-                        // Top line
-                        event->getPulse(0)->segment == pulse->segment - 1 + 14 ||
-                        event->getPulse(0)->segment == pulse->segment     + 14 ||
-                        event->getPulse(0)->segment == pulse->segment + 1 + 14 ||
-                        // Middle
-                        event->getPulse(0)->segment == pulse->segment - 1 ||
-                        event->getPulse(0)->segment == pulse->segment + 1 ||
-                        // Bottom line
-                        event->getPulse(0)->segment == pulse->segment - 1 - 14 ||
-                        event->getPulse(0)->segment == pulse->segment     - 14 ||
-                        event->getPulse(0)->segment == pulse->segment + 1 - 14 ){
+                    if (event->getPulse(0)->segment == pulse->segment){
 
                         prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
