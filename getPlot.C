@@ -23,8 +23,9 @@ void getPlot(char* rootFile){
 
         // scale = Hz / MeV / kg
         float totalRunTime   = 79253.3,
-              scaleAllEvent  = 1 / (totalRunTime * 0.025 * segmentAllEvent * 24.2),
-              scaleDoubleCut = 1 / (totalRunTime * 0.025 * segmentDoubleCut * (40/117.8) * 24.2);
+              binWidth       = 0.05,
+              scaleAllEvent  = 1 / (totalRunTime * binWidth * segmentAllEvent * 24.2),
+              scaleDoubleCut = 1 / (totalRunTime * binWidth * segmentDoubleCut * (40/117.8) * 24.2);
     /* }}} */
 
 
@@ -110,7 +111,7 @@ void getPlot(char* rootFile){
     hist_EnergyPerEvent->GetYaxis()->CenterTitle(kTRUE);
     hist_EnergyPerEvent->GetYaxis()->SetLabelSize(0.03);
 
-    hist_EnergyPerEvent->GetXaxis()->SetRangeUser(0, 2);
+    //hist_EnergyPerEvent->GetXaxis()->SetRangeUser(0, 2);
     hist_EnergyPerEvent->GetXaxis()->SetTitle("Energy [MeV]");
     hist_EnergyPerEvent->GetXaxis()->SetTitleSize(0.03);
     hist_EnergyPerEvent->GetXaxis()->CenterTitle(kTRUE);
@@ -135,9 +136,10 @@ void getPlot(char* rootFile){
 
 
 void Draw(vector<TH1F*> *hists){
-    auto c = new TCanvas("c", "c", 700, 800);
+    auto c = new TCanvas("c", "c", 1100, 800);
 
-    auto l = new TLegend(0.2, 0.12, 0.4, 0.39);
+    // dx = 0.28, dy = 0.19
+    auto l = new TLegend(0.4, 0.625, 0.6, 0.895);
     l->SetTextSize(0.025);
     l->SetLineWidth(0);
 

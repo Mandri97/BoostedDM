@@ -13,7 +13,7 @@
 #include "event.hh"
 
 
-#define NBIN_ENERGY 400
+#define NBIN_ENERGY 200
 #define MIN_ENERGY 0
 #define MAX_ENERGY 10
 
