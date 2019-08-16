@@ -73,7 +73,7 @@ auto hist_Signal_PileUp_time2                = new TH1F("hist_Signal_PileUp_time
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrelatedDecay",         "Rn-Po correlated decay (#pm 25 cm & #pm 7500 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 30 cm & - 750 #mus)", 
+auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 30 cm & - 3500 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
 // count
@@ -284,8 +284,8 @@ void CutEvents (Events *events){ // {{{
                                 if (correlatedDecayRnPo(iEvent, events, 7500, 250)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
-                                    // Bi-Po Correlated Decay +- 300 mm - 750
-                                    if (correlatedDecayBiPo(iEvent, events, 3500, 300)){
+                                    // Bi-Po Correlated Decay +- 300 mm - 3500 us
+                                    if (correlatedDecayBiPo(iEvent, events, 3500, 250)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                     }
                                 }
@@ -597,7 +597,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         } 
     }
 
-    // return prevCorrelated;
+    return prevCorrelated;
 
     long int iNext = iCurrentEvent + 1,
              iMax = allEvents->getNumberOfEvents();
