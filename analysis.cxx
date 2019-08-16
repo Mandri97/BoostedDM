@@ -281,7 +281,7 @@ void CutEvents (Events *events){ // {{{
                                 hist_Signal_PileUp_time2->Fill(energyEvent);
 
                                 // Rn-Po Correlated decay +-250 mm +- 7500 us
-                                if (correlatedDecayRnPo(iEvent, events, 7500, 200)){
+                                if (correlatedDecayRnPo(iEvent, events, 7500, 250)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
                                     // Bi-Po Correlated Decay +- 300 mm - 750
@@ -597,47 +597,45 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         } 
     }
 
-    return prevCorrelated;
-
-    // TODO: Need to modify this if you want to include pulse before signal
+    // return prevCorrelated;
 
     long int iNext = iCurrentEvent + 1,
-             iMax  = allEvents->getNumberOfEvents();
+             iMax = allEvents->getNumberOfEvents();
 
-    bool nextCorrelated = true;
+    bool nextCorrelated = true,
+         foundRequiredPulse = false;
 
-    if (iNext == iMax){
-        prevCorrelated = true;
-    } else {
-        for (; iNext < iMax; iNext++){
-            Event *temp = allEvents->getEvent(iNext);
+    for (; iNext < iMax; iNext++){
+        if (foundRequiredPulse) break;
 
-            // n-pulses
-            if (temp->isSinglePulse() > 0){
+        Event *temp = allEvents->getEvent(iNext);
+
+        // n-pulses
+        if (temp->isSinglePulse() == 0){
+            for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
+                Pulse_t *pulse = temp->getPulse(iPulse);
                 
-                for (int iPulse = 0, j = temp->getNumberOfPulses(); iPulse < j; iPulse++){
+                if (timeWindow(event->getPulse(0), pulse) < time){
 
-                    Pulse_t *pulse = temp->getPulse(iPulse);
-                    
-                    if (timeWindow(event->getPulse(0), pulse) < time){
+                    // same height and same segment
+                    if (event->getPulse(0)->segment == pulse->segment){
 
-                        // same height and same segment
-                        if (event->getPulse(0)->segment == pulse->segment){
-                            nextCorrelated = heightDifference(event->getPulse(0), pulse) > height;
+                        nextrevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
-                            break;
-                        }
-                    } else {
-                         nextCorrelated = true;
+                        foundRequiredPulse = true;
 
                         break;
                     }
+                } else {
+                    foundRequiredPulse = true;
+
+                    break;
                 }
-            }        
-        }
+            }
+        } 
     }
 
-    return prevCorrelated && nextCorrelated;
+    return nextrevCorrelated && nextCorrelated;
 }
 
 /*
