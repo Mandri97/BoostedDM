@@ -602,7 +602,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     long int iNext = iCurrentEvent + 1,
              iMax = allEvents->getNumberOfEvents();
 
-    bool nextCorrelated = true,
+    bool nextCorrelated = true;
          foundRequiredPulse = false;
 
     for (; iNext < iMax; iNext++){
@@ -620,7 +620,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                     // same height and same segment
                     if (event->getPulse(0)->segment == pulse->segment){
 
-                        nextrevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
+                        nextCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
                         foundRequiredPulse = true;
 
@@ -635,7 +635,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         } 
     }
 
-    return nextrevCorrelated && nextCorrelated;
+    return nextCorrelated && nextCorrelated;
 }
 
 /*
