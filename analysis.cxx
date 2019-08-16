@@ -285,7 +285,7 @@ void CutEvents (Events *events){ // {{{
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
                                     // Bi-Po Correlated Decay +- 300 mm - 750
-                                    if (correlatedDecayBiPo(iEvent, events, 750, 300)){
+                                    if (correlatedDecayBiPo(iEvent, events, 3500, 300)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                     }
                                 }
