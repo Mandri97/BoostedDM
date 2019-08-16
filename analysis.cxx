@@ -635,7 +635,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         } 
     }
 
-    return nextCorrelated && nextCorrelated;
+    return prevCorrelated && nextCorrelated;
 }
 
 /*
