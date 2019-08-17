@@ -73,7 +73,7 @@ auto hist_Signal_PileUp_time2                = new TH1F("hist_Signal_PileUp_time
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrelatedDecay",         "Rn-Po correlated decay (#pm 25 cm & #pm 7500 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 30 cm & - 3500 #mus)", 
+auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 35 cm & - 600 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
 // count
@@ -284,8 +284,8 @@ void CutEvents (Events *events){ // {{{
                                 if (correlatedDecayRnPo(iEvent, events, 7500, 250)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
-                                    // Bi-Po Correlated Decay +- 300 mm - 3500 us
-                                    if (correlatedDecayBiPo(iEvent, events, 3500, 250)){
+                                    // Bi-Po Correlated Decay +- 300 mm - 600 us
+                                    if (correlatedDecayBiPo(iEvent, events, 600, 350)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                     }
                                 }
@@ -541,7 +541,19 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
             if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
 
                 // same height and same segment
-                if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
+                if (event->getPulse(0)->segment == temp->getPulse(0)->segment  ||
+                        // Top line
+                        event->getPulse(0)->segment == pulse->segment - 1 + 14 ||
+                        event->getPulse(0)->segment == pulse->segment     + 14 ||
+                        event->getPulse(0)->segment == pulse->segment + 1 + 14 ||
+                        // Middle line
+                        event->getPulse(0)->segment == pulse->segment - 1      ||
+                        event->getPulse(0)->segment == pulse->segment + 1      ||
+                        // Bottom line
+                        event->getPulse(0)->segment == pulse->segment - 1 - 14 ||
+                        event->getPulse(0)->segment == pulse->segment     - 14 ||
+                        event->getPulse(0)->segment == pulse->segment + 1 - 14 ){
+
                       nextCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
 
                       break;
@@ -580,7 +592,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                     // At this point, worrying about the corner of the detector is not
                     // a priority since they are already cuted (double semengt cuts)
                     
-                    if (event->getPulse(0)->segment == pulse->segment){
+                    if ( event->getPulse(0)->segment == pulse->segment ){
 
                         prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
 
@@ -597,6 +609,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         } 
     }
 
+    // TODO: Remove this
     return prevCorrelated;
 
     long int iNext = iCurrentEvent + 1,
