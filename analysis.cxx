@@ -543,16 +543,16 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
                 // same height and same segment
                 if (event->getPulse(0)->segment == temp->getPulse(0)->segment  ||
                         // Top line
-                        event->getPulse(0)->segment == pulse->segment - 1 + 14 ||
-                        event->getPulse(0)->segment == pulse->segment     + 14 ||
-                        event->getPulse(0)->segment == pulse->segment + 1 + 14 ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1 + 14 ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment     + 14 ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1 + 14 ||
                         // Middle line
-                        event->getPulse(0)->segment == pulse->segment - 1      ||
-                        event->getPulse(0)->segment == pulse->segment + 1      ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1      ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1      ||
                         // Bottom line
-                        event->getPulse(0)->segment == pulse->segment - 1 - 14 ||
-                        event->getPulse(0)->segment == pulse->segment     - 14 ||
-                        event->getPulse(0)->segment == pulse->segment + 1 - 14 ){
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1 - 14 ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment     - 14 ||
+                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1 - 14 ){
 
                       nextCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
 
