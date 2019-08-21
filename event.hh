@@ -13,6 +13,7 @@ struct Pulse_t {
     float height,
           energy,
           time,
+          dtime,
           PSD;
 };
 
