@@ -75,6 +75,8 @@ auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 35 cm & - 600 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_Signal_BiPoCorrelatedDecay_time    = new TH2F("hist_Signal_BiPoCorrelatedDecay_time",     "",
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 200);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -125,7 +127,8 @@ void analyzeRootFile(string rootFile){
     float    t_PSD,             // Pulse Shape Discrimination parameter
              t_energy,          // Energy in [MeV]
              t_height;          // width in the segment in [mm]
-    double   t_time;            // absolute time [ns]
+    double   t_time,            // absolute time [ns]
+             t_dtime;           // dt between two pulse
 
     /* Set branch address */
     tree->SetBranchAddress("evt",  &t_event);
@@ -135,6 +138,7 @@ void analyzeRootFile(string rootFile){
     tree->SetBranchAddress("E",    &t_energy);
     tree->SetBranchAddress("z",    &t_height);
     tree->SetBranchAddress("t",    &t_time);
+    tree->SetBranchAddress("dt",   &t_dtime);
 
     long int nentries = tree->GetEntries();
 
@@ -179,6 +183,7 @@ void analyzeRootFile(string rootFile){
         pulse.PID     = t_PID;
         pulse.PSD     = t_PSD;
         pulse.time    = t_time;
+        pulse.dtime   = t_dtime;
         pulse.height  = t_height;
         pulse.energy  = t_energy;
         pulse.segment = t_segment;
@@ -225,6 +230,7 @@ void analysis(char* filename){ // {{{
     hist_Signal_MuonAdjacent_time5->Write();
     hist_Signal_RnPoCorrelatedDecay->Write();
     hist_Signal_BiPoCorrelatedDecay->Write();
+    hist_Signal_BiPoCorrelatedDecay_time->Write();
     hist_Signal_NLiCaptureAdjacent_time400->Write();
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
 
@@ -287,6 +293,7 @@ void CutEvents (Events *events){ // {{{
                                     // Bi-Po Correlated Decay +- 300 mm - 600 us
                                     if (correlatedDecayBiPo(iEvent, events, 600, 350)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
+                                        hist_Signal_BiPoCorrelatedDecay_time->Fill(energyEvent, event->getPulse(0)->dtime);
                                     }
                                 }
                             }
