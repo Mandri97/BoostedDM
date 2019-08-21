@@ -76,7 +76,7 @@ auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrela
 auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 35 cm & - 600 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay_time    = new TH2F("hist_Signal_BiPoCorrelatedDecay_time",     "",
-                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 200);
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 2);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -126,9 +126,9 @@ void analyzeRootFile(string rootFile){
              t_segment;         // segment 
     float    t_PSD,             // Pulse Shape Discrimination parameter
              t_energy,          // Energy in [MeV]
-             t_height;          // width in the segment in [mm]
-    double   t_time,            // absolute time [ns]
+             t_height,          // width in the segment in [mm]
              t_dtime;           // dt between two pulse
+    double   t_time;            // absolute time [ns]
 
     /* Set branch address */
     tree->SetBranchAddress("evt",  &t_event);
