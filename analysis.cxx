@@ -287,11 +287,11 @@ void CutEvents (Events *events){ // {{{
                                 hist_Signal_PileUp_time2->Fill(energyEvent);
 
                                 // Rn-Po Correlated decay +-250 mm +- 7500 us
-                                if (correlatedDecayRnPo(iEvent, events, 7500, 250)){
+                                if (correlatedDecayRnPo(iEvent, events, 7500, 300)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
                                     // Bi-Po Correlated Decay +- 300 mm - 600 us
-                                    if (correlatedDecayBiPo(iEvent, events, 600, 350)){
+                                    if (correlatedDecayBiPo(iEvent, events, 600, 400)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                         hist_Signal_BiPoCorrelatedDecay_time->Fill(energyEvent, event->getPulse(0)->dtime);
                                     }
@@ -512,22 +512,24 @@ bool pileUp (int iCurrentEvent, Events *allEvents, float time){
 bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float height){
 
     // Current pulses
-    Event *event = allEvents->getEvent(iCurrentEvent);
+    Pulse_t *signal = allEvents->getEvent(iCurrentEvent)->getPulse(0);
     
     long int iPrev = iCurrentEvent - 1;
 
     bool prevCorrelated = true;
 
     for (; iPrev >= 0; iPrev--){
-        Event *temp = allEvents->getEvent(iPrev);
+        Event *prevEvent = allEvents->getEvent(iPrev);
 
         // single pulse neutron recoil
-        if (temp->isSinglePulse() == 4){
-            if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
+        if (prevEvent->isSinglePulse() == 4){
+            Pulse_t* prevPulse = prevEvent->getPulse(0);
+
+            if (timeWindow(signal, prevPulse) < time){
 
                 // same height and same segment
-                if (event->getPulse(0)->segment == temp->getPulse(0)->segment){
-                      prevCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
+                if (signal->segment == prevPulse->segment){
+                      prevCorrelated = heightDifference(signal, prevPulse) > height;
 
                       break;
                 } 
@@ -541,30 +543,20 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
     bool nextCorrelated = true;
 
     for (; iNext < iMax; iNext++){
-        Event *temp = allEvents->getEvent(iNext);
+        Event *nextEvent = allEvents->getEvent(iNext);
 
         // single pulse neutron recoil
-        if (temp->isSinglePulse() == 4){
-            if (timeWindow(event->getPulse(0), temp->getPulse(0)) < time){
+        if (nextEvent->isSinglePulse() == 4){
+            Pulse_t* nextPulse = nextEvent->getPulse(0);
+
+            if (timeWindow(signal, nextPulse) < time){
 
                 // same height and same segment
-                if (event->getPulse(0)->segment == temp->getPulse(0)->segment  ||
-                        // Top line
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1 + 14 ||
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment     + 14 ||
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1 + 14 ||
-                        // Middle line
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1      ||
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1      ||
-                        // Bottom line
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment - 1 - 14 ||
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment     - 14 ||
-                        event->getPulse(0)->segment == temp->getPulse(0)->segment + 1 - 14 ){
+                if (signal->segment == nextPulse->segment){
+                    nextCorrelated = heightDifference(signal, nextPulse) > height;
 
-                      nextCorrelated = heightDifference(event->getPulse(0), temp->getPulse(0)) > height;
-
-                      break;
-                } 
+                    break;
+                }
             } else break;
         }
     }
@@ -575,7 +567,7 @@ bool correlatedDecayRnPo(int iCurrentEvent, Events *allEvents, float time, float
 bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float height){
 
     // Current pulses
-    Event *event = allEvents->getEvent(iCurrentEvent);
+    Pulse_t* signal = allEvents->getEvent(iCurrentEvent)->getPulse(0);
     
     long int iPrev = iCurrentEvent - 1;
 
@@ -585,23 +577,23 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     for (; iPrev >= 0; iPrev--){
         if (foundRequiredPulse) break;
 
-        Event *temp = allEvents->getEvent(iPrev);
+        Event *prevEvent = allEvents->getEvent(iPrev);
 
         // n-pulses
-        if (temp->isSinglePulse() == 0){
-            for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
-                Pulse_t *pulse = temp->getPulse(iPulse);
+        if (prevEvent->isSinglePulse() == 0){
+            for (int iPulse = 0, nbPulses = prevEvent->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
+                Pulse_t *pulse = prevEvent->getPulse(iPulse);
                 
-                if (timeWindow(event->getPulse(0), pulse) < time){
+                if (timeWindow(signal, pulse) < time){
 
                     // same height and same segment
 		            // TODO: Change 15 August: segment around segment of signals
                     // At this point, worrying about the corner of the detector is not
                     // a priority since they are already cuted (double semengt cuts)
                     
-                    if ( event->getPulse(0)->segment == pulse->segment ){
+                    if ( signal->segment == pulse->segment ){
 
-                        prevCorrelated = heightDifference(event->getPulse(0), pulse) > height;
+                        prevCorrelated = heightDifference(signal, pulse) > height;
 
                         foundRequiredPulse = true;
 
@@ -635,12 +627,12 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
             for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
                 Pulse_t *pulse = temp->getPulse(iPulse);
                 
-                if (timeWindow(event->getPulse(0), pulse) < time){
+                if (timeWindow(signal, pulse) < time){
 
                     // same height and same segment
-                    if (event->getPulse(0)->segment == pulse->segment){
+                    if (signal->segment == pulse->segment){
 
-                        nextCorrelated = heightDifference(event->getPulse(0), pulse) > height;
+                        nextCorrelated = heightDifference(signal, pulse) > height;
 
                         foundRequiredPulse = true;
 
