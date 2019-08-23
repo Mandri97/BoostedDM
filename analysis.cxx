@@ -287,11 +287,11 @@ void CutEvents (Events *events){ // {{{
                                 hist_Signal_PileUp_time2->Fill(energyEvent);
 
                                 // Rn-Po Correlated decay +-250 mm +- 7500 us
-                                if (correlatedDecayRnPo(iEvent, events, 7500, 300)){
+                                if (correlatedDecayRnPo(iEvent, events, 7500, 350)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
                                     // Bi-Po Correlated Decay +- 300 mm - 600 us
-                                    if (correlatedDecayBiPo(iEvent, events, 600, 400)){
+                                    if (correlatedDecayBiPo(iEvent, events, 3000, 400)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
                                         hist_Signal_BiPoCorrelatedDecay_time->Fill(energyEvent, event->getPulse(0)->dtime);
                                     }
@@ -609,7 +609,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     }
 
     // TODO: Remove this
-    return prevCorrelated;
+    // return prevCorrelated;
 
     long int iNext = iCurrentEvent + 1,
              iMax = allEvents->getNumberOfEvents();
@@ -620,12 +620,12 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
     for (; iNext < iMax; iNext++){
         if (foundRequiredPulse) break;
 
-        Event *temp = allEvents->getEvent(iNext);
+        Event *prevEvent = allEvents->getEvent(iNext);
 
         // n-pulses
-        if (temp->isSinglePulse() == 0){
-            for (int iPulse = 0, nbPulses = temp->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
-                Pulse_t *pulse = temp->getPulse(iPulse);
+        if (prevEvent->isSinglePulse() == 0){
+            for (int iPulse = 0, nbPulses = prevEvent->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
+                Pulse_t *pulse = prevEvent->getPulse(iPulse);
                 
                 if (timeWindow(signal, pulse) < time){
 
@@ -644,7 +644,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                     break;
                 }
             }
-        } 
+        }
     }
 
     return prevCorrelated && nextCorrelated;
