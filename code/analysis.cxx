@@ -588,7 +588,15 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
                 
                 if (timeWindow(signal, pulse) < time){
 
-                    if ( signal->segment == pulse->segment ){
+                    if ( signal->segment == pulse->segment     ||
+                         signal->segment == pulse->segment - 1 ||
+                         signal->segment == pulse->segment + 1 ||
+                         signal->segment == pulse->segment - 1 - 14 ||
+                         signal->segment == pulse->segment     - 14 ||
+                         signal->segment == pulse->segment + 1 - 14 ||
+                         signal->segment == pulse->segment - 1 + 14 ||
+                         signal->segment == pulse->segment     + 14 ||
+                         signal->segment == pulse->segment + 1 + 14 ){
 
                         prevCorrelated = heightDifference(signal, pulse) > height;
 
