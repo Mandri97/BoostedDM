@@ -43,7 +43,7 @@ void Event::addPulse(Pulse_t pulse){
     energyEvent += pulse.energy;
 
     // Check if it is a beta decay
-    allGammaRayPulses &= pulse.PID == 1;
+    allGammaRayPulses = allGammaRayPulses && pulse.PID == 1;
 
     if (pulse.PID == 4) containNeutronRecoil = true;
     if (pulse.PID == 6) containNLiCapture = true;
@@ -72,7 +72,7 @@ bool Event::isContainingNLiCapture(){
 }
 
 bool Event::isBetaDecayEvent(){
-    return allGammaRayPulses;
+    return allGammaRayPulses && this->isSinglePulse() > 0;
 }
 
 /* }}} */
