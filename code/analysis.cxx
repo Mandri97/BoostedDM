@@ -77,7 +77,7 @@ auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay_time    = new TH2F("hist_Signal_BiPoCorrelatedDecay_time",     "",
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 2);
-auto hist_BetaDecay = new TH2F("hist_Beta_Decay", "", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_BetaDecay = new TH2F("hist_BetaDecay", "", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -224,6 +224,7 @@ void analysis(char* filename){ // {{{
 
     // Save histogram
     hist_Signal->Write();
+    hist_BetaDecay->Write();
     hist_EnergyPerEvent->Write();
     hist_SinglePulseEvent->Write();
     hist_Signal_PileUp_time2->Write();
@@ -258,6 +259,8 @@ void CutEvents (Events *events){ // {{{
         float energyEvent = event->getEnergyEvent();
 
         hist_EnergyPerEvent->Fill(energyEvent);
+
+        if (event->isBetaDecayEvent()) hist_BetaDecay->Fill(energyEvent);
 
         if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
 
