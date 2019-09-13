@@ -77,6 +77,7 @@ auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay_time    = new TH2F("hist_Signal_BiPoCorrelatedDecay_time",     "",
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 2);
+auto hist_BetaDecay = new TH2F("hist_Beta_Decay", "", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
