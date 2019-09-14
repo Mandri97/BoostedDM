@@ -72,7 +72,7 @@ bool Event::isContainingNLiCapture(){
 }
 
 bool Event::isBetaDecayEvent(){
-    return allGammaRayPulses && this->isSinglePulse() > 0;
+    return allGammaRayPulses && this->isSinglePulse() == 0;
 }
 
 /* }}} */
