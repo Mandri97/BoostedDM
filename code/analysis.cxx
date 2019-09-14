@@ -75,8 +75,6 @@ auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 25 cm & - 1200 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hist_Signal_BiPoCorrelatedDecay_time    = new TH2F("hist_Signal_BiPoCorrelatedDecay_time",     "",
-                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 2);
 auto hist_BetaDecay = new TH1F("hist_BetaDecay", "", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
 // count
@@ -91,8 +89,8 @@ auto hist_liveSegment_Segment_z_DoubleFV = new TH1F("hist_liveSegment_Segment_z_
 long double totalRunTime = 0.0;
  
  /* }}} */
-int main(int argc, char* argv[]){
 
+int main(int argc, char* argv[]){
     // Check for argument 
     if (argc < 2){
         cout << "Error: Not enough argument\n";
@@ -166,6 +164,9 @@ void analyzeRootFile(string rootFile){
         if (!ientry){
             lastEventID = t_event;
             sameEvent = true;
+
+            // substract total running time
+            totalRunTime -= t_time;
         }else{
             sameEvent = lastEventID == t_event;
             lastEventID = t_event;
@@ -232,7 +233,6 @@ void analysis(char* filename){ // {{{
     hist_Signal_MuonAdjacent_time5->Write();
     hist_Signal_RnPoCorrelatedDecay->Write();
     hist_Signal_BiPoCorrelatedDecay->Write();
-    hist_Signal_BiPoCorrelatedDecay_time->Write();
     hist_Signal_NLiCaptureAdjacent_time400->Write();
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
 
@@ -264,7 +264,7 @@ void CutEvents (Events *events){ // {{{
 
         if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
 
-        // Select signals
+        // Select potential signals
         if (event->isSinglePulse() == 4 || event->isSinglePulse() == 6){
             hist_Signal->Fill(energyEvent);
 
@@ -282,7 +282,7 @@ void CutEvents (Events *events){ // {{{
                     if (neutronAdjacent(iEvent, events, 4, 5)){
                         hist_Signal_NeutronRecoilAdjacent_time5->Fill(energyEvent);
 
-                        // nLi capture adjacent veto within 4000 us
+                        // nLi capture adjacent veto within 400 us
                         if (neutronAdjacent(iEvent, events, 6, 400)){
                             hist_Signal_NLiCaptureAdjacent_time400->Fill(energyEvent);
 
@@ -290,14 +290,13 @@ void CutEvents (Events *events){ // {{{
                             if (pileUp(iEvent, events, 2)){
                                 hist_Signal_PileUp_time2->Fill(energyEvent);
 
-                                // Rn-Po Correlated decay +-250 mm +- 7500 us
+                                // Rn-Po Correlated decay +-250 mm +- 15000 us
                                 if (correlatedDecayRnPo(iEvent, events, 15000, 250)){
                                     hist_Signal_RnPoCorrelatedDecay->Fill(energyEvent);
 
-                                    // Bi-Po Correlated Decay +- 300 mm - 600 us
+                                    // Bi-Po Correlated Decay +- 250 mm - 1200 us
                                     if (correlatedDecayBiPo(iEvent, events, 1200, 250)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
-                                        hist_Signal_BiPoCorrelatedDecay_time->Fill(energyEvent, event->getPulse(0)->dtime);
                                     }
                                 }
                             }
@@ -583,8 +582,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
 
         Event *prevEvent = allEvents->getEvent(iPrev);
 
-        if (prevEvent->isSinglePulse() == 0 &&                                            // n-pulses
-            prevEvent->getEnergyEvent() >= 0.25 && prevEvent->getEnergyEvent() < 3.25 &&  // Energy restriction
+        if ( prevEvent->getEnergyEvent() >= 0.25 && prevEvent->getEnergyEvent() < 3.25 &&  // Energy restriction
             prevEvent->isBetaDecayEvent() ){                                              // Beta decay only
 
             for (int iPulse = 0, nbPulses = prevEvent->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
