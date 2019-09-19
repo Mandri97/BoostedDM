@@ -81,6 +81,20 @@ auto hist_Energy_vs_PSD_noPIDCut             = new TH2F("hist_Energy_vs_PSD_noPI
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 1);
 auto hist_Signal_PSD                         = new TH1F("hist_Signal_PSD", "PSD value", 
                                                         200, 0, 0.5);
+auto hist_PSD_Energy_3_to_4                  = new TH1F("hist_PSD_Energy_3_to_4", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_4_to_5                  = new TH1F("hist_PSD_Energy_4_to_5", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_5_to_6                  = new TH1F("hist_PSD_Energy_5_to_6", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_6_to_7                  = new TH1F("hist_PSD_Energy_6_to_7", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_7_to_8                  = new TH1F("hist_PSD_Energy_7_to_8", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_8_to_9                  = new TH1F("hist_PSD_Energy_8_to_9", ";PSD",
+                                                        200, 0, 0.5);
+auto hist_PSD_Energy_9_to_10                  = new TH1F("hist_PSD_Energy_9_to_10", ";PSD",
+                                                        200, 0, 0.5);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -244,6 +258,14 @@ void analysis(char* filename){ // {{{
     hist_Energy_vs_PSD_noPIDCut->Write();
     hist_Signal_PSD->Write();
 
+    hist_PSD_Energy_3_to_4->Write();
+    hist_PSD_Energy_4_to_5->Write();
+    hist_PSD_Energy_5_to_6->Write();
+    hist_PSD_Energy_6_to_7->Write();
+    hist_PSD_Energy_7_to_8->Write();
+    hist_PSD_Energy_8_to_9->Write();
+    hist_PSD_Energy_9_to_10->Write();
+
     hist_liveSegment->Write();
     hist_liveSegment_Segment_z_DoubleFV->Write();
 
@@ -309,6 +331,14 @@ void CutEvents (Events *events){ // {{{
                                         hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD);
 
                                         if (energyEvent >= 3.5 && energyEvent < 10) hist_Signal_PSD->Fill(event->getPulse(0)->PSD);
+
+                                        if      (energyEvent > 3 && energyEvent < 4) hist_PSD_Energy_3_to_4->Fill(event->getPulse(0)->PSD);
+                                        else if (energyEvent > 4 && energyEvent < 5) hist_PSD_Energy_4_to_5->Fill(event->getPulse(0)->PSD);
+                                        else if (energyEvent > 5 && energyEvent < 6) hist_PSD_Energy_5_to_6->Fill(event->getPulse(0)->PSD);
+                                        else if (energyEvent > 6 && energyEvent < 7) hist_PSD_Energy_6_to_7->Fill(event->getPulse(0)->PSD);
+                                        else if (energyEvent > 7 && energyEvent < 8) hist_PSD_Energy_7_to_8->Fill(event->getPulse(0)->PSD);
+                                        else if (energyEvent > 8 && energyEvent < 9) hist_PSD_Energy_8_to_9->Fill(event->getPulse(0)->PSD);
+                                        else                                         hist_PSD_Energy_9_to_10->Fill(event->getPulse(0)->PSD);
                                     }
                                 }
                             }
