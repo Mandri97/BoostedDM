@@ -303,7 +303,7 @@ void CutEvents (Events *events){ // {{{
                                     if (correlatedDecayBiPo(iEvent, events, 1200, 250)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
 
-                                        hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD());
+                                        hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD);
                                     }
                                 }
                             }
