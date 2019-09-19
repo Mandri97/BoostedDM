@@ -239,6 +239,8 @@ void analysis(char* filename){ // {{{
     hist_Signal_NLiCaptureAdjacent_time400->Write();
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
 
+    hist_Energy_vs_PSD_noPIDCut->Write();
+
     hist_liveSegment->Write();
     hist_liveSegment_Segment_z_DoubleFV->Write();
 
@@ -301,7 +303,7 @@ void CutEvents (Events *events){ // {{{
                                     if (correlatedDecayBiPo(iEvent, events, 1200, 250)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
 
-                                        hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->PSD());
+                                        hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD());
                                     }
                                 }
                             }
