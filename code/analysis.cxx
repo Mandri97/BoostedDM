@@ -79,6 +79,8 @@ auto hist_BetaDecay                          = new TH1F("hist_BetaDecay", "",
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Energy_vs_PSD_noPIDCut             = new TH2F("hist_Energy_vs_PSD_noPIDCut",             "Energy vs PSD",
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 1);
+auto hist_Signal_PSD                         = new TH1F("hist_Signal_PSD", "PSD value", 
+                                                        200, 0, 0.5);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -240,6 +242,7 @@ void analysis(char* filename){ // {{{
     hist_Signal_NeutronRecoilAdjacent_time5->Write();
 
     hist_Energy_vs_PSD_noPIDCut->Write();
+    hist_Signal_PSD->Write();
 
     hist_liveSegment->Write();
     hist_liveSegment_Segment_z_DoubleFV->Write();
@@ -304,6 +307,8 @@ void CutEvents (Events *events){ // {{{
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
 
                                         hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD);
+
+                                        if (energyEvent >= 3.5 && energyEvent < 10) hist_Signal_PSD->Fill(event->getPulse(0)->PSD);
                                     }
                                 }
                             }
