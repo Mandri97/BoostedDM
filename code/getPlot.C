@@ -1,5 +1,7 @@
 void Draw(vector<TH1F*> *hists);
 
+TH1F* setupHistogram(TFile* file, char *name, Color_t color, float scaling);
+
 void getPlot(char* rootFile){
     // open rootfile
     auto _file = new TFile(rootFile, "read");
@@ -23,7 +25,7 @@ void getPlot(char* rootFile){
 
         // scale = Hz / MeV / kg
         float totalRunTime   = 79253.3,
-              binWidth       = 0.05,
+              binWidth       = 0.025,
               scaleAllEvent  = 1 / (totalRunTime * binWidth * segmentAllEvent * 24.2),
               scaleDoubleCut = 1 / (totalRunTime * binWidth * segmentDoubleCut * (40/117.8) * 24.2);
     /* }}} */
@@ -149,4 +151,13 @@ void Draw(vector<TH1F*> *hists){
     }
 
     l->Draw();
+}
+
+
+TH1F* setupHistogram(TFile* file, char *name, Color_t color, float scaling){
+    auto temp = (TH1F*) file->Get(name);
+    temp->SetLineColor(color);
+    temp->Scale(scaling);
+
+    return temp;
 }
