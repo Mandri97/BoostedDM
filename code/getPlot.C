@@ -42,7 +42,7 @@ void getPlot(char* rootFile){
     /* Single Pulse Event {{{ */
     // Blue
         auto hist_SinglePulseEvent = (TH1F*)_file->Get("hist_SinglePulseEvent");
-        hist_SinglePulseEvent->SetLineColor(kBlue);
+        hist_SinglePulseEvent->SetLineColor(kOrange + 3);
         hist_SinglePulseEvent->Scale(scaleAllEvent);
     /* }}} */
     
@@ -50,7 +50,7 @@ void getPlot(char* rootFile){
     /* Signal {{{ */
     // Red
         auto hist_Signal = (TH1F*)_file->Get("hist_Signal");
-        hist_Signal->SetLineColor(kRed);
+        hist_Signal->SetLineColor(kOrange - 2);
         hist_Signal->Scale(scaleAllEvent);
     /* }}} */
     
@@ -58,7 +58,7 @@ void getPlot(char* rootFile){
     /* Segment and height double fiducialization {{{ */
     // Purple
         auto hist_Signal_Segmet_z_DoubleFV = (TH1F*)_file->Get("hist_Signal_Segmet_z_DoubleFV");
-        hist_Signal_Segmet_z_DoubleFV->SetLineColor(kMagenta - 6);
+        hist_Signal_Segmet_z_DoubleFV->SetLineColor(kYellow - 3);
         hist_Signal_Segmet_z_DoubleFV->Scale(scaleDoubleCut);
     /* }}} */
 
@@ -66,7 +66,7 @@ void getPlot(char* rootFile){
     /* Muon Adjacent veto {{{ */
     // kTeal +4
         auto hist_Signal_MuonAdjacent_time5 = (TH1F*)_file->Get("hist_Signal_MuonAdjacent_time5");
-        hist_Signal_MuonAdjacent_time5->SetLineColor(kTeal + 4);
+        hist_Signal_MuonAdjacent_time5->SetLineColor(kMagenta + 2);
         hist_Signal_MuonAdjacent_time5->Scale(scaleDoubleCut);
     /* }}} */
 
@@ -74,7 +74,7 @@ void getPlot(char* rootFile){
     /* Neutron recoil Adjacent veto {{{ */
     // kCyan - 3
         auto hist_Signal_NeutronRecoilAdjacent_time5 = (TH1F*)_file->Get("hist_Signal_NeutronRecoilAdjacent_time5");
-        hist_Signal_NeutronRecoilAdjacent_time5->SetLineColor(kCyan - 3);
+        hist_Signal_NeutronRecoilAdjacent_time5->SetLineColor(kTeal + 4);
         hist_Signal_NeutronRecoilAdjacent_time5->Scale(scaleDoubleCut);
     /* }}} */
 
@@ -82,7 +82,7 @@ void getPlot(char* rootFile){
     /* NLi Capture Adjacent veto {{{ */
     // kYellow - 3
         auto hist_Signal_NLiCaptureAdjacent_time400 = (TH1F*)_file->Get("hist_Signal_NLiCaptureAdjacent_time400");
-        hist_Signal_NLiCaptureAdjacent_time400->SetLineColor(kYellow - 3);
+        hist_Signal_NLiCaptureAdjacent_time400->SetLineColor(kCyan - 6);
         hist_Signal_NLiCaptureAdjacent_time400->Scale(scaleDoubleCut);
     /* }}} */
 
@@ -90,7 +90,7 @@ void getPlot(char* rootFile){
     /* Pile Up {{{ */
     // kOrange - 3
         auto hist_Signal_PileUp_time2 = (TH1F*)_file->Get("hist_Signal_PileUp_time2");
-        hist_Signal_PileUp_time2->SetLineColor(kOrange - 3);
+        hist_Signal_PileUp_time2->SetLineColor(kRed - 7);
         hist_Signal_PileUp_time2->Scale(scaleDoubleCut);
     /* }}} */
 
@@ -104,6 +104,7 @@ void getPlot(char* rootFile){
     /* Bi - Po Correlated Decay {{{ */
         auto hist_Signal_BiPoCorrelatedDecay = (TH1F*)_file->Get("hist_Signal_BiPoCorrelatedDecay");
         hist_Signal_BiPoCorrelatedDecay->Scale(scaleDoubleCut);
+        hist_Signal_BiPoCorrelatedDecay->SetLineColor(kPink - 2);
     /* }}} */
 
     hist_EnergyPerEvent->GetYaxis()->SetRangeUser(1e-7, 0.8);
