@@ -75,7 +75,10 @@ auto hist_Signal_RnPoCorrelatedDecay         = new TH1F("hist_Signal_RnPoCorrela
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_Signal_BiPoCorrelatedDecay         = new TH1F("hist_Signal_BiPoCorrelatedDecay",         "Bi-Po correlated decay (#pm 25 cm & - 1200 #mus)", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hist_BetaDecay = new TH1F("hist_BetaDecay", "", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_BetaDecay                          = new TH1F("hist_BetaDecay", "", 
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_Energy_vs_PSD_noPIDCut             = new TH2F("hist_Energy_vs_PSD_noPIDCut",             "Energy vs PSD",
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 1);
 
 // count
 auto hist_liveSegment                    = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
@@ -265,7 +268,7 @@ void CutEvents (Events *events){ // {{{
         if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
 
         // Select potential signals
-        if (event->isSinglePulse() == 4 || event->isSinglePulse() == 6){
+        if (event->isSinglePulse() != 0){ // Not select the PID requiremet for signal
             hist_Signal->Fill(energyEvent);
 
             // Segment and z double fiducial cuts
@@ -297,6 +300,8 @@ void CutEvents (Events *events){ // {{{
                                     // Bi-Po Correlated Decay +- 250 mm - 1200 us
                                     if (correlatedDecayBiPo(iEvent, events, 1200, 250)){
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
+
+                                        hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->PSD());
                                     }
                                 }
                             }
@@ -583,7 +588,7 @@ bool correlatedDecayBiPo(int iCurrentEvent, Events *allEvents, float time, float
         Event *prevEvent = allEvents->getEvent(iPrev);
 
         if ( prevEvent->getEnergyEvent() >= 0.25 && prevEvent->getEnergyEvent() < 3.25 &&  // Energy restriction
-            prevEvent->isBetaDecayEvent() ){                                              // Beta decay only
+            prevEvent->isBetaDecayEvent() ){                                               // Beta decay only
 
             for (int iPulse = 0, nbPulses = prevEvent->getNumberOfPulses(); iPulse < nbPulses; iPulse++){
                 Pulse_t *pulse = prevEvent->getPulse(iPulse);
