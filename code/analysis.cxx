@@ -110,6 +110,10 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
+    // Initialize histograms
+    for (int i = 0; i < 10; i++)
+        hist_PSD_Energy[i] = new TH1F(Form("hist_PSD_Energy[%i]", i), Form("PSD in %i to %i;PSD", i, i + 1), 200, 0, 0.5);
+
     analysis(argv[1]);
 
     return 0;
@@ -245,7 +249,7 @@ void analysis(char* filename){ // {{{
     hist_Energy_vs_PSD_noPIDCut->Write();
     hist_Signal_PSD->Write();
     
-    for (int i = 0; i < 10; i++) hist_PSD_Energy[0]->Write();
+    for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
 
     hist_liveSegment->Write();
     hist_liveSegment_Segment_z_DoubleFV->Write();
@@ -263,11 +267,7 @@ void analysis(char* filename){ // {{{
 
 void CutEvents (Events *events){ // {{{
     
-    // Initialize histograms
-    for (int i = 0; i < 10; i++)
-        hist_PSD_Energy[i] = new TH1F(Form("hist_PSD_Energy_%i", i), Form("PSD in %i to %i;PSD", i, i + 1), 200, 0, 0.5);
-
-    for (long int iEvent = 0, iMax = events->getNumberOfEvents(); iEvent < iMax; iEvent++){
+        for (long int iEvent = 0, iMax = events->getNumberOfEvents(); iEvent < iMax; iEvent++){
 
         Event *event = events->getEvent(iEvent);
 
@@ -280,15 +280,19 @@ void CutEvents (Events *events){ // {{{
         if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
 
         // Select potential signals
-        if (event->isSinglePulse() != 0){ // Not select the PID requiremet for signal
+        if (event->isSinglePulse() != 0){ // No PID requirement for potential signals
             hist_Signal->Fill(energyEvent);
 
-            // get energy range
-            int iHist = (int) energyEvent;
+            if (abs(event->getPulse(0)->height) < 200 && pileUp(iEvent, events, 2)){
+                int iHist = -1;
 
-            if (energyEvent >= 0.7 && energyEvent < 1) hist_PSD_Energy[0]->Fill(event->getPulse(0)->PSD);
-            else                                       hist_PSD_Energy[iHist]->Fill(event->getPulse(0)->PSD);
+                // get energy range
+                if (energyEvent < 10) iHist = (int) energyEvent;
 
+                if (energyEvent >= 0.7 && energyEvent < 1) hist_PSD_Energy[0]->Fill(event->getPulse(0)->PSD);
+                else if (iHist > 0)                        hist_PSD_Energy[iHist]->Fill(event->getPulse(0)->PSD);
+            }
+            
             // Segment and z double fiducial cuts
             if (doubleFiducialCut(event->getPulse(0)->segment) && abs(event->getPulse(0)->height) < 200){
                 hist_Signal_Segmet_z_DoubleFV->Fill(energyEvent);
