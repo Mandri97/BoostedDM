@@ -112,7 +112,7 @@ int main(int argc, char* argv[]){
 
     // Initialize histograms
     for (int i = 0; i < 10; i++)
-        hist_PSD_Energy[i] = new TH1F(Form("hist_PSD_Energy[%i]", i), Form("PSD in %i to %i;PSD", i, i + 1), 200, 0, 0.5);
+        hist_PSD_Energy[i] = new TH1F(Form("hist_PSD_Energy_%i", i), Form("PSD in %i to %i;PSD", i, i + 1), 200, 0, 0.5);
 
     analysis(argv[1]);
 
