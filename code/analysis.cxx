@@ -291,6 +291,8 @@ void CutEvents (Events *events){ // {{{
 
                 if (energyEvent >= 0.7 && energyEvent < 1) hist_PSD_Energy[0]->Fill(event->getPulse(0)->PSD);
                 else if (iHist > 0)                        hist_PSD_Energy[iHist]->Fill(event->getPulse(0)->PSD);
+
+                if (energyEvent >= 3.5 && energyEvent < 10) hist_Signal_PSD->Fill(event->getPulse(0)->PSD);
             }
             
             // Segment and z double fiducial cuts
@@ -324,8 +326,6 @@ void CutEvents (Events *events){ // {{{
                                         hist_Signal_BiPoCorrelatedDecay->Fill(energyEvent);
 
                                         hist_Energy_vs_PSD_noPIDCut->Fill(energyEvent, event->getPulse(0)->PSD);
-
-                                        if (energyEvent >= 3.5 && energyEvent < 10) hist_Signal_PSD->Fill(event->getPulse(0)->PSD);
                                     }
                                 }
                             }
