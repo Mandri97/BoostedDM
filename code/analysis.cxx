@@ -28,7 +28,7 @@ struct Statistics_t {
 
 struct PSD_t {
     Statistics_t gammaBand,
-                 neutronRecoil,
+                 neutronBand,
                  farany;
 };
 
@@ -334,17 +334,17 @@ void CutEvents (Events *events){ // {{{
         // get energy range
         if (energyEvent < 10) iHist = (int) energyEvent;
 
-        if (iHist = -1) continue;
+        if (iHist == -1) continue;
         
         PSD_t psdEnergy = PSD_per_energy2[iHist];
         float neutronBandMin = psdEnergy.neutronBand.mean - psdEergy.neutronBand.std;
         float neutronBandMax = psdEnergy.neutronBand.mean + psdEergy.neutronBand.std;
 
-        float faranyBandMin = psdEnergy.faranyBand.mean - psdEergy.faranyBand.std;
-        float faranyBandMax = psdEnergy.faranyBand.mean + psdEergy.faranyBand.std;
+        float faranyMin = psdEnergy.farany.mean - psdEergy.farany.std;
+        float faranyMax = psdEnergy.farany.mean + psdEergy.farany.std;
     
         if (event->getPulse(0)->PSD >= neutronBandMin && event->getPulse(0)->PSD <= neutronBandMax ||
-                event->getPulse(0)->PSD >= faranyBandMin  && event->getPulse(0)->PSD <= faranyBandMax   ){
+                event->getPulse(0)->PSD >= faranyMin  && event->getPulse(0)->PSD <= faranyMax   ){
             hist_custom_PSD->Fill(energyEvent);
         }
 
