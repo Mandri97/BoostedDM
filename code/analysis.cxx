@@ -337,7 +337,7 @@ void CutEvents (Events *events){ // {{{
         if (iHist == -1) continue;
         
         PSD_t psdEnergy = PSD_per_energy2[iHist];
-        float neutronBandMin = psdEnergy.neutronBand.mean - psdEergy.neutronBand.std;
+        float neutronBandMin = psdEnergy.neutronBand.mean - psdEnergy.neutronBand.std;
         float neutronBandMax = psdEnergy.neutronBand.mean + psdEergy.neutronBand.std;
 
         float faranyMin = psdEnergy.farany.mean - psdEergy.farany.std;
