@@ -32,6 +32,7 @@ struct PSD_t {
                  farany;
 };
 
+// Single pulse + Height (20 cm) + PileUp 2 us
 PSD_t PSD_per_energy[10] = {
     { {0.1445, 0.01404}, {0.2581, 0.01979}, {0.0, 0.0} },              // Energy: 0.7 - 1 MeV
     { {0.1437, 0.01143}, {0.2319, 0.02553}, {0.0, 0.0} },              // Energy: 1 - 2 MeV 
@@ -43,6 +44,20 @@ PSD_t PSD_per_energy[10] = {
     { {0.1388, 0.00624}, {0.1820, 0.01002}, {0.2221, 0.02031} },       // Energy: 7 - 8 MeV
     { {0.1384, 0.00598}, {0.1799, 0.00884}, {0.2115, 0.02352} },       // Energy: 8 - 9 MeV
     { {0.1383, 0.00570}, {0.1775, 0.00846}, {0.2000, 0.02779} }        // Energy: 9 - 10 MeV
+};
+
+// Single pulse + Height (55 cm) + PileUp 2 us
+PSD_t PSD_per_energy2[10] = {
+    { {0.1444, 0.01403}, {0.2429, 0.02336}, {0.2638, 0.01653} },       // Energy: 0.7 - 1 MeV
+    { {0.1435, 0.01143}, {0.2202, 0.01755}, {0.2573, 0.01438} },       // Energy: 1 - 2 MeV 
+    { {0.1423, 0.00857}, {0.2070, 0.01344}, {0.2508, 0.01312} },       // Energy: 2 - 3 Mev
+    { {0.1397, 0.00786}, {0.2005, 0.01538}, {0.2498, 0.01102} },       // Energy: 3 - 4 MeV
+    { {0.1395, 0.00728}, {0.1945, 0.01402}, {0.2429, 0.01266} },       // Energy: 4 - 5 MeV
+    { {0.1393, 0.00684}, {0.1896, 0.01278}, {0.2382, 0.01382} },       // Energy: 5 - 6 MeV
+    { {0.1391, 0.00652}, {0.1857, 0.01197}, {0.2299, 0.01749} },       // Energy: 6 - 7 MeV
+    { {0.1388, 0.00628}, {0.1833, 0.01158}, {0.2280, 0.01599} },       // Energy: 7 - 8 MeV
+    { {0.1384, 0.00611}, {0.1802, 0.01021}, {0.2180, 0.02036} },       // Energy: 8 - 9 MeV
+    { {0.1383, 0.00593}, {0.1780, 0.01008}, {0.2116, 0.02357} }        // Energy: 9 - 10 MeV
 };
 
 using namespace std;
@@ -105,6 +120,10 @@ auto hist_Energy_vs_PSD_noPIDCut             = new TH2F("hist_Energy_vs_PSD_noPI
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY, 200, 0, 1);
 auto hist_Signal_PSD                         = new TH1F("hist_Signal_PSD", "PSD value", 
                                                         200, 0, 0.5);
+auto hist_default_PSD                        = new TH1F("hist_default_PSD", "Potential signals using default PSD", 
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_custom_PSD                         = new TH1F("hist_custom_PSD", "Potential signals using custom PSD", 
+                                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 TH1F* hist_PSD_Energy[10];
 
 // count
@@ -273,6 +292,9 @@ void analysis(char* filename){ // {{{
     hist_Energy_vs_PSD_noPIDCut->Write();
     hist_Signal_PSD->Write();
     
+    hist_default_PSD->Write();
+    hist_custom_PSD->Write();
+
     for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
 
     hist_liveSegment->Write();
@@ -303,7 +325,31 @@ void CutEvents (Events *events){ // {{{
 
         if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
 
+        if (event->isSinglePulse() == 4 || event->isSinglePulse() == 6){
+            hist_default_PSD->Fill(energyEvent);
+        }
+
+        int iHist = -1;
+
+        // get energy range
+        if (energyEvent < 10) iHist = (int) energyEvent;
+
+        if (iHist = -1) continue;
+        
+        PSD_t psdEnergy = PSD_per_energy2[iHist];
+        float neutronBandMin = psdEnergy.neutronBand.mean - psdEergy.neutronBand.std;
+        float neutronBandMax = psdEnergy.neutronBand.mean + psdEergy.neutronBand.std;
+
+        float faranyBandMin = psdEnergy.faranyBand.mean - psdEergy.faranyBand.std;
+        float faranyBandMax = psdEnergy.faranyBand.mean + psdEergy.faranyBand.std;
+    
+        if (event->getPulse(0)->PSD >= neutronBandMin && event->getPulse(0)->PSD <= neutronBandMax ||
+                event->getPulse(0)->PSD >= faranyBandMin  && event->getPulse(0)->PSD <= faranyBandMax   ){
+            hist_custom_PSD->Fill(energyEvent);
+        }
+
         // Select potential signals
+        /*
         if (event->isSinglePulse() != 0){ // No PID requirement for potential signals
             hist_Signal->Fill(energyEvent);
 
@@ -358,6 +404,7 @@ void CutEvents (Events *events){ // {{{
                 }
             }
         }
+        */
     }
 } // }}}
 
