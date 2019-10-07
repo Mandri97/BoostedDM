@@ -344,7 +344,7 @@ void CutEvents (Events *events){ // {{{
         float faranyMax = psdEnergy.farany.mean + psdEergy.farany.std;
     
         if ((event->getPulse(0)->PSD >= neutronBandMin && event->getPulse(0)->PSD <= neutronBandMax) ||
-            (event->getPulse(0)->PSD >= faranyMin  && event->getPulse(0)->PSD <= faranyMax           ){
+            (event->getPulse(0)->PSD >= faranyMin  && event->getPulse(0)->PSD <= faranyMax          )){
             hist_custom_PSD->Fill(energyEvent);
         }
 
