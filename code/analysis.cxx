@@ -332,7 +332,7 @@ void CutEvents (Events *events){ // {{{
         int iHist = -1;
 
         // get energy range
-        if (energyEvent < 10) iHist = (int) energyEvent;
+        if (energyEvent < 10 && energyEvent > 0 && event->isSinglePulse() != 0) iHist = (int) energyEvent;
 
         if (iHist == -1) continue;
         
