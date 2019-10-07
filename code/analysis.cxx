@@ -340,8 +340,8 @@ void CutEvents (Events *events){ // {{{
         float neutronBandMin = psdEnergy.neutronBand.mean - psdEnergy.neutronBand.std;
         float neutronBandMax = psdEnergy.neutronBand.mean + psdEnergy.neutronBand.std;
 
-        float faranyMin = psdEnergy.farany.mean - psdEergy.farany.std;
-        float faranyMax = psdEnergy.farany.mean + psdEergy.farany.std;
+        float faranyMin = psdEnergy.farany.mean - psdEnergy.farany.std;
+        float faranyMax = psdEnergy.farany.mean + psdEnergy.farany.std;
     
         if ((event->getPulse(0)->PSD >= neutronBandMin && event->getPulse(0)->PSD <= neutronBandMax) ||
             (event->getPulse(0)->PSD >= faranyMin  && event->getPulse(0)->PSD <= faranyMax          )){
