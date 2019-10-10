@@ -69,7 +69,7 @@ inline void helper (char *prgramName);
 
 
 /* Consider each root file separately */
-void analysis (char* filename);
+void analysis (char* filename, char* outname);
 
 
 /* Analyze root file */
@@ -141,12 +141,12 @@ long double totalRunTime = 0.0;
 
 int main(int argc, char* argv[]){
     // Check for argument 
-    if (argc < 2){
+    if (argc < 3){
         cout << "Error: Not enough argument\n";
         helper(argv[0]);
 
         return 1;
-    }else if (argc > 2){
+    }else if (argc > 3){
         cout << "Too many argument \n";
         helper(argv[0]);
 
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]){
     for (int i = 0; i < 10; i++)
         hist_PSD_Energy[i] = new TH1F(Form("hist_PSD_Energy_%i", i), Form("PSD in %i to %i;PSD", i, i + 1), 200, 0, 0.5);
 
-    analysis(argv[1]);
+    analysis(argv[1], argv[2]);
 
     return 0;
 }
@@ -261,11 +261,11 @@ void analyzeRootFile(string rootFile){
 
 
 inline void helper(char *programName){
-    cout << "\tUsage: " << programName << " filename\n" << endl;
+    cout << "\tUsage: " << programName << " filename output\n" << endl;
 }
 
 
-void analysis(char* filename){ // {{{
+void analysis(char* filename, char* outname){ // {{{
 
     ifstream textFile(filename);
 
@@ -274,7 +274,7 @@ void analysis(char* filename){ // {{{
     // Consider root file separately
     while (textFile >> oneRootFile) analyzeRootFile(oneRootFile);
 
-    auto outFile = new TFile("analysis.root", "recreate");
+    auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
     // Save histogram
     hist_Signal->Write();
@@ -349,10 +349,10 @@ void CutEvents (Events *events){ // {{{
         }
 
         // Select potential signals
-        /*
-        if (event->isSinglePulse() != 0){ // No PID requirement for potential signals
+        if (event->isSinglePulse() == 4 || event->isSinglePulse() == 6){ // No PID requirement for potential signals
             hist_Signal->Fill(energyEvent);
 
+            /*
             if (abs(event->getPulse(0)->height) < 550 && pileUp(iEvent, events, 2)){
                 int iHist = -1;
 
@@ -364,6 +364,7 @@ void CutEvents (Events *events){ // {{{
 
                 if (energyEvent >= 3.5 && energyEvent < 10) hist_Signal_PSD->Fill(event->getPulse(0)->PSD);
             }
+            */
             
             // Segment and z double fiducial cuts
             if (doubleFiducialCut(event->getPulse(0)->segment) && abs(event->getPulse(0)->height) < 200){
@@ -404,7 +405,6 @@ void CutEvents (Events *events){ // {{{
                 }
             }
         }
-        */
     }
 } // }}}
 
