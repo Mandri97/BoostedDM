@@ -105,6 +105,7 @@ Event* Events::getEvent(int iEvent){
 }
 
 void Events::addEvent(Event event){
+    event.index = this->getNumberOfEvents();
     events.push_back(event);
 }
 

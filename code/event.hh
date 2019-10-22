@@ -1,4 +1,5 @@
 #include <vector>
+#include <cstdint>
 #include <assert.h>
 
 #ifndef __EVENT_H_
@@ -27,6 +28,9 @@ class Event {
              containNLiCapture,
              allGammaRayPulses;
 
+    protected:
+        int64_t index;
+
     public:
         Event();
         ~Event();
@@ -45,6 +49,9 @@ class Event {
         bool isContainingNeutronRecoil();
         bool isContainingNLiCapture();
         bool isBetaDecayEvent();
+
+        // friend class
+        friend class Events;
 };
 
 class Events {

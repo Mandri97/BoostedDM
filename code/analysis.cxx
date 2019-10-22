@@ -21,10 +21,12 @@
 #define MIN_SEGMENT 0
 #define MAX_SEGMENT 154
 
+
 struct Statistics_t {
     float mean,
           std;
 };
+
 
 struct PSD_t {
     Statistics_t gammaBand,
@@ -32,22 +34,9 @@ struct PSD_t {
                  farany;
 };
 
-// Single pulse + Height (20 cm) + PileUp 2 us
-PSD_t PSD_per_energy[10] = {
-    { {0.1445, 0.01404}, {0.2581, 0.01979}, {0.0, 0.0} },              // Energy: 0.7 - 1 MeV
-    { {0.1437, 0.01143}, {0.2319, 0.02553}, {0.0, 0.0} },              // Energy: 1 - 2 MeV 
-    { {0.1424, 0.00897}, {0.2068, 0.01276}, {0.2500, 0.01438} },       // Energy: 2 - 3 Mev
-    { {0.1395, 0.00795}, {0.2003, 0.01459}, {0.2514, 0.01234} },       // Energy: 3 - 4 MeV
-    { {0.1394, 0.00730}, {0.1937, 0.01246}, {0.2405, 0.01434} },       // Energy: 4 - 5 MeV
-    { {0.1394, 0.00684}, {0.1882, 0.01087}, {0.2325, 0.01770} },       // Energy: 5 - 6 MeV
-    { {0.1392, 0.00657}, {0.1857, 0.01136}, {0.2270, 0.01959} },       // Energy: 6 - 7 MeV
-    { {0.1388, 0.00624}, {0.1820, 0.01002}, {0.2221, 0.02031} },       // Energy: 7 - 8 MeV
-    { {0.1384, 0.00598}, {0.1799, 0.00884}, {0.2115, 0.02352} },       // Energy: 8 - 9 MeV
-    { {0.1383, 0.00570}, {0.1775, 0.00846}, {0.2000, 0.02779} }        // Energy: 9 - 10 MeV
-};
 
 // Single pulse + Height (55 cm) + PileUp 2 us
-PSD_t PSD_per_energy2[10] = {
+PSD_t PSD_per_energy[10] = {
     { {0.1444, 0.01403}, {0.2429, 0.02336}, {0.2638, 0.01653} },       // Energy: 0.7 - 1 MeV
     { {0.1435, 0.01143}, {0.2202, 0.01755}, {0.2573, 0.01438} },       // Energy: 1 - 2 MeV 
     { {0.1423, 0.00857}, {0.2070, 0.01344}, {0.2508, 0.01312} },       // Energy: 2 - 3 Mev
@@ -336,7 +325,7 @@ void CutEvents (Events *events){ // {{{
 
         if (iHist == -1) continue;
         
-        PSD_t psdEnergy = PSD_per_energy2[iHist];
+        PSD_t psdEnergy = PSD_per_energy[iHist];
         float neutronBandMin = psdEnergy.neutronBand.mean - psdEnergy.neutronBand.std;
         float neutronBandMax = psdEnergy.neutronBand.mean + psdEnergy.neutronBand.std;
 
