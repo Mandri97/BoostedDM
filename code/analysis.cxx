@@ -11,7 +11,7 @@
 
 
 #include "event.hh"
-//#include "cut.hh"
+#include "cut.hh"
 
 
 #define NBIN_ENERGY 400
@@ -32,7 +32,7 @@ struct Statistics_t {
 struct PSD_t {
     Statistics_t gammaBand,
                  neutronBand,
-                 farany;
+                 nLiBand;
 };
 
 
@@ -237,7 +237,7 @@ void analyzeRootFile(string rootFile){
 
     CutEvents(events);
 
-    delete events, tree;
+    delete events;
 
     _file->Close();
 }
