@@ -37,12 +37,14 @@ class Event {
 
         void Initialize();
 
-        // Getter
-        int      getNumberOfPulses();
+        /******* Getter ********/
         float    getEnergyEvent();
+
+            // Pulse realted
+        int      getNumberOfPulses();
         Pulse_t* getPulse(int iPulse);
 
-        // Setter
+        /******** Setter ********/
         void addPulse(Pulse_t pulse);
 
         int isSinglePulse();
@@ -52,6 +54,7 @@ class Event {
 
         // friend class
         friend class Events;
+        friend class Cut_t;
 };
 
 class Events {
