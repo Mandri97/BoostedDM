@@ -337,7 +337,10 @@ void Cut::Run(){
     for (long int iEntry = 0, nEntries = events->getNumberOfEvents(); iEntry < nEntries; ++iEntry){
         currentEvent = events->getEvent(iEntry); 
 
-        histogramEvent->Fill(currentEvent->getEnergyEvent());
+        float energyEvent = currentEvent->getEnergyEvent();
+        histogramEvent->Fill(energyEvent);
+
+        if (energyEvent > 10 || energyEvent < 0) continue;
 
         bool satisfyCut = true;
 
