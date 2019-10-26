@@ -339,7 +339,7 @@ void CutEvents (Events *events){
 
     Cut *cutEvent = new Cut(events);
 
-    cutEvent->addCut("SinglePulseEvent", 4, 6, hist_Signal);
+    cutEvent->addCut("singlePulseEvent", 4, 6, hist_Signal);
     cutEvent->addCut("fiducialAndHeight", 200, hist_Signal_Segmet_z_DoubleFV);
     cutEvent->addCut("muonAdjacent", 5, hist_Signal_MuonAdjacent_time5);
     cutEvent->addCut("neutronAdjacent", 4, 5, hist_Signal_NeutronRecoilAdjacent_time5);
