@@ -344,6 +344,7 @@ void CutEvents (Events *events){
     cutEvent->addCut("muonAdjacent", 5, hist_Signal_MuonAdjacent_time5);
     cutEvent->addCut("neutronAdjacent", 4, 5, hist_Signal_NeutronRecoilAdjacent_time5);
     cutEvent->addCut("neutronAdjacent", 6, 400, hist_Signal_NLiCaptureAdjacent_time400);
+    cutEvent->addCut("pileUp", 2, hist_Signal_PileUp_time2);
     cutEvent->addCut("RnPoDecay", 15000, 250, hist_Signal_RnPoCorrelatedDecay);
     cutEvent->addCut("BiPoDecay", 1200, 250, hist_Signal_BiPoCorrelatedDecay);
 
