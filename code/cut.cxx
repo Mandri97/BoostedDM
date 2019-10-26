@@ -334,7 +334,7 @@ bool Cut::__PileUpCut__ (float time){
 }
 
 void Cut::Run(){
-    for (long int iEntry = 0, nEntries = events->getNumberOfEvents(); iEntry < Entries; ++iEntry){
+    for (long int iEntry = 0, nEntries = events->getNumberOfEvents(); iEntry < nEntries; ++iEntry){
         currentEvent = events->getEvent(iEntry); 
 
         histogramEvent->Fill(currentEvent->getEnergyEvent());
