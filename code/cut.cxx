@@ -16,8 +16,9 @@ map<string, int> cutNameValue = {
     {"pileUp", 6}
 };
 
-Cut::Cut(Events *data){
+Cut::Cut(Events *data, TH1F* hist){
     events = data;
+    histogramEvent = hist;
 
     currentEvent = nullptr;
     pulseCandidate = nullptr;
@@ -37,9 +38,7 @@ Cut::~Cut(){
 
 bool Cut::__SinglePulseCut__(float PID1, float PID2){
 
-    PID1 = (int) PID1; PID2 = (int) PID2;
-
-    if (currentEvent->isSinglePulse() == PID1 || currentEvent->isSinglePulse() == PID2){
+    if (currentEvent->isSinglePulse() == (int) PID1 || currentEvent->isSinglePulse() == (int) PID2){
         pulseCandidate = currentEvent->getPulse(0);
 
         return true;
@@ -335,8 +334,10 @@ bool Cut::__PileUpCut__ (float time){
 }
 
 void Cut::Run(){
-    for (long int iEvt = 0, j = events->getNumberOfEvents(); iEvt < j; ++iEvt){
-        currentEvent = events->getEvent(iEvt); 
+    for (long int iEntry = 0, nEntries = events->getNumberOfEvents(); iEntry < Entries; ++iEntry){
+        currentEvent = events->getEvent(iEntry); 
+
+        histogramEvent->Fill(currentEvent->getEnergyEvent());
 
         bool satisfyCut = true;
 
@@ -385,7 +386,7 @@ void Cut::Run(){
                     satisfyCut *= this->__MuonAdjacentCut__(arg1);
 
                     break;
-                default:
+                case 6:
                     // PileUp
                     assert(arg1 != -1);
                     satisfyCut *= this->__PileUpCut__(arg1);
@@ -470,7 +471,7 @@ void Cut::addCut(const char* cutName, TH1F* histogram){
     rankCut++;
 }
 
- void Cut::addCut(const char* cutName, float arg1, TH1F* histogram){
+void Cut::addCut(const char* cutName, float arg1, TH1F* histogram){
     this->addCut(cutName, histogram);
 
     cutsToBeApplied[rankCut - 1].arg1 = arg1;

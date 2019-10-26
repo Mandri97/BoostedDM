@@ -16,6 +16,8 @@ class Cut {
         Events* events;
         Pulse_t* pulseCandidate;
 
+        TH1F* histogramEvent;
+
         struct __args__ {
             int cutValue;
             float arg1, arg2;
