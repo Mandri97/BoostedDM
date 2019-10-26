@@ -54,7 +54,7 @@ class Event {
 
         // friend class
         friend class Events;
-        friend class Cut_t;
+        friend class Cut;
 };
 
 class Events {

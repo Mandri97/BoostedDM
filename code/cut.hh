@@ -1,12 +1,30 @@
 #include "event.hh"
 
+#include <string>
+#include <map>
+
+#include <TH1.h>
+
 #ifndef __CUT_H__
 #define __CUT_H__
 
-class Cut_t {
+#define MAX_CUT 20
+
+class Cut {
     private:
+        Event* currentEvent;
         Events* events;
-        Event*  currentEvent;
+        Pulse_t* pulseCandidate;
+
+        struct __args__ {
+            int cutValue;
+            float arg1, arg2;
+            TH1F* hist;
+        };
+
+        std::map<int, __args__> cutsToBeApplied;
+
+        int rankCut;
 
         // dead times
         float RnPo_d,
@@ -17,27 +35,32 @@ class Cut_t {
               muonAdjacent_d,
               pileUp_d;
 
-    public:
-        Cut_t(Event *event, Events *events);
-        ~Cut_t();
+        bool __SinglePulseCut__ (float PID1, float PID2);
+        bool __RnPoDecayCut__ (float time, float height);
+        bool __BiPoDecayCut__ (float time, float height);
+        bool __FiducializationAndHeightCut__ (float height);
+        bool __NeutronAdjacentCut__ (float PID, float time);
+        bool __MuonAdjacentCut__ (float time);
+        bool __PileUpCut__ (float time);
+        bool __HeightCut__ (float height);
 
-        // IMPLEMENT AN INTERATOR FOR EVENTS
-        /******** Cuts **********/
-        bool correlatedDecayRnPo(float time, float height);
-        bool correlatedDecayBiPo(float time, float height);
-        bool doubleFiducialCut ();
-        bool neutronAdjacent (int PID, float time);
-        bool muonAdjacent (float time);
-        bool pileUp (float time);
-        bool height(int height);
+    public:
+        Cut(Events *events);
+        ~Cut();
+
+        // Add cut function
+        void addCut(const char* cutName, TH1F* histogram);
+        void addCut(const char* cutName, float arg1, TH1F* histogram);
+        void addCut(const char* cutName, float arg1, float arg2, TH1F* histogram);
 
         /******** Getter ********/
-        float deadTimeRnPo();
-        float deadTimeBiPo();
-        float deadTimeNeutronAdjacent(int PID);
-        float deadTimeMuonAdjacent();
-        float deadTimePileUp();
+        float RnPoDeadTime();
+        float BiPoDeadTime();
+        float NeutronAdjacentDeadTime(int PID);
+        float MuonAdjacentDeadTime();
+        float PileUpDeadTime();
 
+        void Run();
 
         // Useful function
         float timeWindow (Pulse_t *a, Pulse_t *b);

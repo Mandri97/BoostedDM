@@ -313,31 +313,8 @@ void analysis(char* filename, char* outname){ // {{{
 
 
 void CutEvents (Events *events){
-    for (long int i = 0, j = events->getNumberOfEvents(); i < j; i++){
-
-        Event* event = events->getEvent(i);
-
-        float energyEvent = event->getEnergyEvent();
-
-        hist_EnergyPerEvent->Fill(energyEvent);
-        
-        if (event->isSinglePulse() != 0) hist_SinglePulseEvent->Fill(energyEvent);
-
-        // Initialize cut
-        Cut_t* cutEvent = new Cut_t(event, events);
-
-       // Single Pulse event selection
-        bool isSinglePulseEvent = false;
-
-        // Using default PID
-        // Change isSinglePulseEvent here for the new PID dinfinition
-        /*
-        if (event->isSinglePulse() == 4 || event->isSinglePulse() == 6){
-            isSinglePulseEvent = true;
-            hist_default_PSD->Fill(energyEvent);
-        }
-        */
-      
+     
+    /*
         // Using new PID
         int iHist = -1;
 
@@ -358,9 +335,28 @@ void CutEvents (Events *events){
             isSinglePulseEvent = true;
             hist_custom_PSD->Fill(energyEvent);
         }
+        */
 
+    Cut *cutEvent = new Cut(events);
 
+    cutEvent->addCut("SinglePulseEvent", 4, 6, hist_Signal);
+    cutEvent->addCut("fiducialAndHeight", 200, hist_Signal_Segmet_z_DoubleFV);
+    cutEvent->addCut("muonAdjacent", 5, hist_Signal_MuonAdjacent_time5);
+    cutEvent->addCut("neutronAdjacent", 4, 5, hist_Signal_NeutronRecoilAdjacent_time5);
+    cutEvent->addCut("neutronAdjacent", 6, 400, hist_Signal_NLiCaptureAdjacent_time400);
+    cutEvent->addCut("RnPoDecay", 15000, 250, hist_Signal_RnPoCorrelatedDecay);
+    cutEvent->addCut("BiPoDecay", 1200, 250, hist_Signal_BiPoCorrelatedDecay);
+
+    cutEvent->Run();
+
+    deadTimeRnPo_d += cutEvent->RnPoDeadTime();
+    deadTimeBiPo_d += cutEvent->BiPoDeadTime();
+    deadTimeNeutronRecoil += cutEvent->NeutronAdjacentDeadTime(4);
+    deadTimeNLi += cutEvent->NeutronAdjacentDeadTime(6);
+    deadTimeMuon += cutEvent->MuonAdjacentDeadTime();
+    deadTimePile += cutEvent->PileUpDeadTime();
         // Applying different cuts
+        /*
         if (!isSinglePulseEvent) continue;
    
         hist_Signal->Fill(energyEvent);
@@ -395,11 +391,6 @@ void CutEvents (Events *events){
             }
         }
     }
+    */
 
-    deadTimeRnPo_d += cutEvent->deadTimeRnPo();
-    deadTimeBiPo_d += cutEvent->deadTimeBiPo();
-    deadTimeNeutronRecoil += cutEvent->deadTimeNeutronAdjacent(4);
-    deadTimeNLi += cutEvent->deadTimeNeutronAdjacent(6);
-    deadTimeMuon += cutEvent->deadTimeMuonAdjacent();
-    deadTimePile += cutEvent->deadTimePileUp();
 }

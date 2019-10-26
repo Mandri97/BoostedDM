@@ -1,22 +1,54 @@
 #include "cut.hh"
+
 #include <cmath>
+#include <cstddef>
+#include <assert.h>
 
 using namespace std;
 
-Cut_t::Cut_t(Event *event, Events *data){
+map<string, int> cutNameValue = {
+    {"singlePulseEvent", 0},
+    {"RnPoDecay", 1},
+    {"BiPoDecay", 2},
+    {"fiducialAndHeight", 3},
+    {"neutronAdjacent", 4},
+    {"muonAdjacent", 5},
+    {"pileUp", 6}
+};
+
+Cut::Cut(Events *data){
     events = data;
-    currentEvent = event;
+
+    currentEvent = nullptr;
+    pulseCandidate = nullptr;
+
+    RnPo_d = .0; BiPo_d = .0; neutronAdjacent_d = .0; nRecoilAdjacent_d = .0;
+    nLiAdjacent_d = .0; muonAdjacent_d = .0; pileUp_d = .0;
+
+    rankCut = 0;
+
+    cutsToBeApplied.clear();
 }
 
-Cut_t::~Cut_t(){
-    delete events, currentEvent;
+Cut::~Cut(){
+    cutsToBeApplied.clear();
+    delete events; 
 }
 
-bool Cut_t::correlatedDecayRnPo(float time, float height){
+bool Cut::__SinglePulseCut__(float PID1, float PID2){
 
-    // Get pulse
-    Pulse_t *pulseCandidate = currentEvent->getPulse(0);
+    PID1 = (int) PID1; PID2 = (int) PID2;
 
+    if (currentEvent->isSinglePulse() == PID1 || currentEvent->isSinglePulse() == PID2){
+        pulseCandidate = currentEvent->getPulse(0);
+
+        return true;
+    }
+
+    return false;
+}
+
+bool Cut::__RnPoDecayCut__(float time, float height){
     // Previous events
     bool prevCorrelation = true;
 
@@ -64,12 +96,8 @@ bool Cut_t::correlatedDecayRnPo(float time, float height){
     return prevCorrelation && nextCorrelation;
 }
 
-bool Cut_t::correlatedDecayBiPo(float time, float height){
-
-    // Current pulses
-    Pulse_t* pulseCandidate = currentEvent->getPulse(0);
-    
-    bool prevCorrelation = true,
+bool Cut::__BiPoDecayCut__(float time, float height){
+   bool prevCorrelation = true,
          foundRequiredPulse = false;
 
     for (long int iPrev = currentEvent->index - 1; iPrev >= 0; iPrev--){
@@ -115,19 +143,21 @@ bool Cut_t::correlatedDecayBiPo(float time, float height){
     return prevCorrelation;
 }
 
-bool Cut_t::doubleFiducialCut (){
-    int segment = currentEvent->getPulse(0)->segment;
+bool Cut::__FiducializationAndHeightCut__ (float height){
+    int segment = pulseCandidate->segment;
 
-    return ((segment >= 30  && segment <= 39)  ||
-            (segment >= 44  && segment <= 53)  ||
-            (segment >= 58  && segment <= 67)  ||
-            (segment >= 72  && segment <= 81)  ||
-            (segment >= 86  && segment <= 95)  ||
-            (segment >= 100 && segment <= 109) ||
-            (segment >= 114 && segment <= 123) );
+    bool F = ((segment >= 30  && segment <= 39)  ||
+              (segment >= 44  && segment <= 53)  ||
+              (segment >= 58  && segment <= 67)  ||
+              (segment >= 72  && segment <= 81)  ||
+              (segment >= 86  && segment <= 95)  ||
+              (segment >= 100 && segment <= 109) ||
+              (segment >= 114 && segment <= 123) );
+
+    return F && this->__HeightCut__(height);
 }
 
-bool Cut_t::neutronAdjacent (int PID, float time){
+bool Cut::__NeutronAdjacentCut__ (float PID, float time){
 
     /* Check if there is a neutron event adjacent to the pulse within certain time interval 
      *
@@ -139,6 +169,9 @@ bool Cut_t::neutronAdjacent (int PID, float time){
      *        - true: if no neutron adjacent (PID requirement) within @time us
      *        - false; if there is a neutron adjancet (PID requirement) within @time us
      */
+
+    PID = (int) PID;
+
     bool prevNeutronAdjacent = true;
 
     for (long int iPrev = currentEvent->index - 1; iPrev >= 0; iPrev--){
@@ -149,7 +182,7 @@ bool Cut_t::neutronAdjacent (int PID, float time){
 
             // Looking for event containing neutron recoil
             if (temp->isContainingNeutronRecoil()){
-                prevNeutronAdjacent = timeWindow(currentEvent->getPulse(0),
+                prevNeutronAdjacent = timeWindow(pulseCandidate,
                     temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
                 break;
@@ -159,14 +192,14 @@ bool Cut_t::neutronAdjacent (int PID, float time){
 
             // Looking for event containing nLi capture
             if (temp->isContainingNLiCapture()){
-                prevNeutronAdjacent = timeWindow(currentEvent->getPulse(0),
+                prevNeutronAdjacent = timeWindow(pulseCandidate,
                     temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
                 break;
             }
 
         } else {
-            prevNeutronAdjacent = timeWindow(currentEvent->getPulse(0),
+            prevNeutronAdjacent = timeWindow(pulseCandidate,
                 temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
             break;
@@ -186,7 +219,7 @@ bool Cut_t::neutronAdjacent (int PID, float time){
 
             // Looking for event containing neutron recoil
             if (temp->isContainingNeutronRecoil()){
-                nextNeutronAdjacent = timeWindow(currentEvent->getPulse(0), temp->getPulse(0)) > time;
+                nextNeutronAdjacent = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
 
                 break;
             }
@@ -195,13 +228,13 @@ bool Cut_t::neutronAdjacent (int PID, float time){
 
             // Looking for event containing nLi capture
             if (temp->isContainingNLiCapture()){
-                nextNeutronAdjacent = timeWindow(currentEvent->getPulse(0), temp->getPulse(0)) > time;
+                nextNeutronAdjacent = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
 
                 break;
             }
 
         } else {
-            nextNeutronAdjacent = timeWindow(currentEvent->getPulse(0), temp->getPulse(0)) > time;
+            nextNeutronAdjacent = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
 
             break;
         }
@@ -218,7 +251,7 @@ bool Cut_t::neutronAdjacent (int PID, float time){
     return prevNeutronAdjacent && nextNeutronAdjacent;
 } // }}}
 
-bool Cut_t::muonAdjacent (float time){ // {{{
+bool Cut::__MuonAdjacentCut__ (float time){ // {{{
 
     /* Check if here is a muon event adjacent to the pulse within a certain time interval
      * @param:
@@ -239,7 +272,7 @@ bool Cut_t::muonAdjacent (float time){ // {{{
         if (temp->getEnergyEvent() > 15){
 
             prevMuonAdjacent =
-                timeWindow(currentEvent->getPulse(0), temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
+                timeWindow(pulseCandidate, temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
 
             break;
         }
@@ -257,7 +290,7 @@ bool Cut_t::muonAdjacent (float time){ // {{{
         if (temp->getEnergyEvent() > 15){
 
             nextMuonAdjacent =
-                timeWindow(currentEvent->getPulse(0), temp->getPulse(0)) > time;
+                timeWindow(pulseCandidate, temp->getPulse(0)) > time;
 
             break;
         }
@@ -267,7 +300,7 @@ bool Cut_t::muonAdjacent (float time){ // {{{
     return prevMuonAdjacent && nextMuonAdjacent;
 } // }}} 
 
-bool Cut_t::pileUp (float time){
+bool Cut::__PileUpCut__ (float time){
     /* Check if there is any event within @time microseconds
      * @param:
      *        - time: time interval 
@@ -283,7 +316,7 @@ bool Cut_t::pileUp (float time){
     if (iPrev > -1){
         Event *temp = events->getEvent(iPrev);
 
-        prevPileUp = timeWindow(currentEvent->getPulse(0), temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
+        prevPileUp = timeWindow(pulseCandidate, temp->getPulse(temp->getNumberOfPulses() - 1)) > time;
     }
 
     long int iNext = currentEvent->index + 1;
@@ -293,26 +326,93 @@ bool Cut_t::pileUp (float time){
     if (iNext < events->getNumberOfEvents()){
         Event *temp = events->getEvent(iNext);
 
-        nextPileUp = timeWindow(currentEvent->getPulse(0), temp->getPulse(0)) > time;
+        nextPileUp = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
     }
 
     if (prevPileUp && nextPileUp == false) pileUp_d += 2 * time;
+
     return prevPileUp && nextPileUp;
 }
 
-bool Cut_t::height(int height){
-    return currentEvent->getPulse(0)->height < 200;
+void Cut::Run(){
+    for (long int iEvt = 0, j = events->getNumberOfEvents(); iEvt < j; ++iEvt){
+        currentEvent = events->getEvent(iEvt); 
+
+        bool satisfyCut = true;
+
+        for (auto i = cutsToBeApplied.begin(), j = cutsToBeApplied.end(); i != j; ++i){
+            auto cutParameters = i->second;
+
+            int cutValue = cutParameters.cutValue;
+            float arg1 = cutParameters.arg1;
+            float arg2 = cutParameters.arg2;
+            TH1F *histogram = cutParameters.hist;
+
+            switch(cutValue){
+                case 0:
+                    // SinglePulseEvent
+                    assert(arg1 != -1 && arg2 != -1);
+                    satisfyCut *= this->__SinglePulseCut__(arg1, arg2);
+
+                    break;
+                case 1:
+                    // RnPoDecay
+                    assert(arg1 != -1 && arg2 != -1);
+                    satisfyCut *= this->__RnPoDecayCut__(arg1, arg2);
+
+                    break;
+                case 2:
+                    // BiPoDecay
+                    assert(arg1 != -1 && arg2 != -1);
+                    satisfyCut *= this->__BiPoDecayCut__(arg1, arg2);
+
+                    break;
+                case 3:
+                    // fiducialAndHeight
+                    assert(arg1 != -1);
+                    satisfyCut *= this->__FiducializationAndHeightCut__(arg1);
+
+                    break;
+                case 4:
+                    // neutronAdjacent
+                    assert(arg1 != -1 && arg2 != -1);
+                    satisfyCut *= this->__NeutronAdjacentCut__(arg1, arg2);
+
+                    break;
+                case 5:
+                    // muonAdjacent
+                    assert(arg1 != -1);
+                    satisfyCut *= this->__MuonAdjacentCut__(arg1);
+
+                    break;
+                default:
+                    // PileUp
+                    assert(arg1 != -1);
+                    satisfyCut *= this->__PileUpCut__(arg1);
+
+                    break;
+            }
+
+            if (satisfyCut) histogram->Fill(currentEvent->getEnergyEvent());
+            else break;
+        }
+         
+    }
 }
 
-float Cut_t::deadTimeRnPo(){
+bool Cut::__HeightCut__(float height){
+    return pulseCandidate->height < (int) height;
+}
+
+float Cut::RnPoDeadTime(){
     return RnPo_d;
 }
 
-float Cut_t::deadTimeBiPo(){
+float Cut::BiPoDeadTime(){
     return BiPo_d;
 }
 
-float Cut_t::deadTimeNeutronAdjacent(int PID){
+float Cut::NeutronAdjacentDeadTime(int PID){
     switch(PID){
         case 4:
             return nRecoilAdjacent_d;
@@ -329,22 +429,55 @@ float Cut_t::deadTimeNeutronAdjacent(int PID){
     }
 }
 
-float Cut_t::deadTimeMuonAdjacent(){
+float Cut::MuonAdjacentDeadTime(){
     return muonAdjacent_d;
 }
 
-float Cut_t::deadTimePileUp(){
+float Cut::PileUpDeadTime(){
     return pileUp_d;
 }
 
-float Cut_t::heightDifference (Pulse_t *a, Pulse_t *b){ // {{{
+float Cut::heightDifference (Pulse_t *a, Pulse_t *b){ // {{{
     // return the height difference in mm between 2 pulses
 
     return abs(a->height - b->height);
 } // }}}
 
-float Cut_t::timeWindow (Pulse_t *a, Pulse_t *b){ // {{{
+float Cut::timeWindow (Pulse_t *a, Pulse_t *b){ // {{{
     // return the time difference in microseconds between 2 pulses
     
     return abs(a->time - b->time) * 1e-3;
 } // }}}
+
+
+void Cut::addCut(const char* cutName, TH1F* histogram){
+    // Verify that the cut exist
+    bool nameExist = false;
+
+    string cutName_s = string(cutName);
+
+    for (auto name : cutNameValue){
+        if (name.first == cutName_s){
+            nameExist = true;
+            break;
+        }
+    }
+
+    assert (nameExist);
+
+    cutsToBeApplied[rankCut] = {cutNameValue[cutName_s], -1, -1, histogram};
+
+    rankCut++;
+}
+
+ void Cut::addCut(const char* cutName, float arg1, TH1F* histogram){
+    this->addCut(cutName, histogram);
+
+    cutsToBeApplied[rankCut - 1].arg1 = arg1;
+}
+
+ void Cut::addCut(const char* cutName, float arg1, float arg2, TH1F* histogram){
+    this->addCut(cutName, arg1, histogram);
+
+    cutsToBeApplied[rankCut - 1].arg2 = arg2;
+}
