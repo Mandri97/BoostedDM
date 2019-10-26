@@ -405,7 +405,7 @@ void Cut::Run(){
 }
 
 bool Cut::__HeightCut__(float height){
-    return pulseCandidate->height < (int) height;
+    return abs(pulseCandidate->height) < (int) height;
 }
 
 float Cut::RnPoDeadTime(){
