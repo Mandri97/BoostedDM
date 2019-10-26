@@ -288,12 +288,12 @@ void analysis(char* filename, char* outname){ // {{{
     totalRunTime = (totalRunTime - 18419.3) * 1e-9;
     
     // conversion
-    deadTimeRnPo_d = deadTimeRnPo_d * 1e-9 / totalRunTime; 
-    deadTimeBiPo_d = deadTimeBiPo_d * 1e-9 / totalRunTime; 
-    deadTimeNeutronRecoil = deadTimeNeutronRecoil  * 1e-9 / totalRunTime;
-    deadTimeNLi = deadTimeNLi  * 1e-9 / totalRunTime;
-    deadTimeMuon = deadTimeMuon * 1e-9 / totalRunTime;
-    deadTimePile = deadTimePile * 1e-9 / totalRunTime;
+    deadTimeRnPo_d = deadTimeRnPo_d * 1e-4 / totalRunTime; 
+    deadTimeBiPo_d = deadTimeBiPo_d * 1e-4 / totalRunTime; 
+    deadTimeNeutronRecoil = deadTimeNeutronRecoil  * 1e-4 / totalRunTime;
+    deadTimeNLi = deadTimeNLi  * 1e-4 / totalRunTime;
+    deadTimeMuon = deadTimeMuon * 1e-4 / totalRunTime;
+    deadTimePile = deadTimePile * 1e-4 / totalRunTime;
 
 
     cout << "Analysis finished.\n\n";
