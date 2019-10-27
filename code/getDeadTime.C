@@ -1,4 +1,4 @@
-void getDeadTime.C(const char* file){
+void getDeadTime (const char* file){
     TFile *_file = new TFile(file);
 
     auto fiducialAndHeight = ((TH1F*) _file->Get("hist_Signal_Segmet_z_DoubleFV"))->GetEntries();
@@ -17,10 +17,17 @@ void getDeadTime.C(const char* file){
     auto BiPoDeadTime = (RnPo - BiPo) * 1200 * 1e-6;
 
     cout << "Dead time" << endl;
-    cout << "\tMuon: " << MuonDeadTime << " s, " << MuonDeadTim * 100 / 79253.3 << endl;
+    cout << "\tMuon: " << MuonDeadTime << " s, " << MuonDeadTime * 100 / 79253.3 << endl;
     cout << "\tNeutron Recoil: " << NeutronRecoilDeadTime << " s, " << NeutronRecoilDeadTime * 100/79253.3 << endl;
     cout << "\tNLi: " << NLiDeadTime << " s, " << NLiDeadTime * 100 / 79253.3 << endl;
     cout << "\tPile up: " << PileUpDeadTime << " s, " << PileUpDeadTime * 100 / 79253.3 << endl;
     cout << "\tRnPo: " << RnPoDeadTime << " s, " << RnPoDeadTime * 100 / 79253.3 << endl;
     cout << "\tBiPo: " << BiPoDeadTime << " s, " << BiPoDeadTime * 100 / 79253.3 << endl;
+
+    cout << endl;
+
+    auto total = (MuonDeadTime + NeutronRecoilDeadTime + NLiDeadTime + PileUpDeadTime + RnPoDeadTime +
+                 BiPoDeadTime) * 100 / 79253.3;
+
+    cout << "Total inefficiency: " << total << endl;
 }
