@@ -16,6 +16,33 @@ map<string, int> cutNameValue = {
     {"pileUp", 6}
 };
 
+struct Statistics_t {
+    float mean,
+          std;
+};
+
+
+struct PSD_t {
+    Statistics_t gammaBand,
+                 neutronBand,
+                 nLiBand;
+};
+
+// Single pulse + Height (55 cm) + PileUp 2 us
+PSD_t PSD_per_energy[10] = {
+    { {0.1444, 0.01403}, {0.2429, 0.02336}, {0.2638, 0.01653} },       // Energy: 0.7 - 1 MeV
+    { {0.1435, 0.01143}, {0.2202, 0.01755}, {0.2573, 0.01438} },       // Energy: 1 - 2 MeV 
+    { {0.1423, 0.00857}, {0.2070, 0.01344}, {0.2508, 0.01312} },       // Energy: 2 - 3 Mev
+    { {0.1397, 0.00786}, {0.2005, 0.01538}, {0.2498, 0.01102} },       // Energy: 3 - 4 MeV
+    { {0.1395, 0.00728}, {0.1945, 0.01402}, {0.2429, 0.01266} },       // Energy: 4 - 5 MeV
+    { {0.1393, 0.00684}, {0.1896, 0.01278}, {0.2382, 0.01382} },       // Energy: 5 - 6 MeV
+    { {0.1391, 0.00652}, {0.1857, 0.01197}, {0.2299, 0.01749} },       // Energy: 6 - 7 MeV
+    { {0.1388, 0.00628}, {0.1833, 0.01158}, {0.2280, 0.01599} },       // Energy: 7 - 8 MeV
+    { {0.1384, 0.00611}, {0.1802, 0.01021}, {0.2180, 0.02036} },       // Energy: 8 - 9 MeV
+    { {0.1383, 0.00593}, {0.1780, 0.01008}, {0.2116, 0.02357} }        // Energy: 9 - 10 MeV
+};
+
+
 Cut::Cut(Events *data, TH1F* hist){
     events = data;
     histogramEvent = hist;
@@ -38,9 +65,34 @@ Cut::~Cut(){
 
 bool Cut::__SinglePulseCut__(float PID1, float PID2){
 
+    if (currentEvent->isSinglePulse() == 0) return false;
+
+    // Using default PID
+    /*
     if (currentEvent->isSinglePulse() == (int) PID1 || currentEvent->isSinglePulse() == (int) PID2){
         pulseCandidate = currentEvent->getPulse(0);
 
+        return true;
+    }
+    */
+
+    // Using new PID -> 2 STD
+    int iHist = (int) currentEvent->getEnergyEvent();
+
+    PSD_t psdEnergy = PSD_per_energy[iHist];
+
+    auto pulse = currentEvent->getPulse(0);
+
+    float neutronBandMin = psdEnergy.neutronBand.mean - 2 * psdEnergy.neutronBand.std;
+    float neutronBandMax = psdEnergy.neutronBand.mean + 2 * psdEnergy.neutronBand.std;
+
+    float nLiBandMin = psdEnergy.nLiBand.mean - 2 * psdEnergy.nLiBand.std;
+    float nLiBandMax = psdEnergy.nLiBand.mean + 2 * psdEnergy.nLiBand.std;
+
+    if ((pulse->PSD >= neutronBandMin && pulse->PSD <= neutronBandMax) ||
+        (pulse->PSD >= nLiBandMin     && pulse->PSD <= nLiBandMax    ) ){
+
+        pulseCandidate = pulse;
         return true;
     }
 
