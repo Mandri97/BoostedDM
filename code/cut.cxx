@@ -91,7 +91,7 @@ bool Cut::__RnPoDecayCut__(float time, float height){
         }
     }
 
-    if (prevCorrelation && nextCorrelation == false) RnPo_d += 2 * time;
+    if ((prevCorrelation && nextCorrelation) == false) RnPo_d += 2 * time;
     return prevCorrelation && nextCorrelation;
 }
 
@@ -240,12 +240,11 @@ bool Cut::__NeutronAdjacentCut__ (float PID, float time){
     }
     
     // neutron recoil
-    if (PID == 4){
-        if (prevNeutronAdjacent && nextNeutronAdjacent == false) nRecoilAdjacent_d += 2 * time;
-    }else if (PID == 6){
-        if (prevNeutronAdjacent && nextNeutronAdjacent == false) nLiAdjacent_d += 2 * time;
-    }else
-        if (prevNeutronAdjacent && nextNeutronAdjacent == false) neutronAdjacent_d += 2 * time;
+    if ((prevNeutronAdjacent && nextNeutronAdjacent) == false){
+        if (PID == 4) nRecoilAdjacent_d += 2 * time;
+        else if (PID == 6) nLiAdjacent_d += 2 * time;
+        else  neutronAdjacent_d += 2 * time;
+    }
 
     return prevNeutronAdjacent && nextNeutronAdjacent;
 } // }}}
@@ -295,7 +294,7 @@ bool Cut::__MuonAdjacentCut__ (float time){ // {{{
         }
     }
 
-    if (prevMuonAdjacent && nextMuonAdjacent == false) muonAdjacent_d += 2 * time;
+    if ((prevMuonAdjacent && nextMuonAdjacent) == false) muonAdjacent_d += 2 * time;
     return prevMuonAdjacent && nextMuonAdjacent;
 } // }}} 
 
@@ -328,7 +327,7 @@ bool Cut::__PileUpCut__ (float time){
         nextPileUp = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
     }
 
-    if (prevPileUp && nextPileUp == false) pileUp_d += 2 * time;
+    if ((prevPileUp && nextPileUp) == false) pileUp_d += 2 * time;
 
     return prevPileUp && nextPileUp;
 }

@@ -13,19 +13,19 @@ void getPlot(char* rootFile){
     /* Scaling coefficient {{{ */
         
         auto hist_liveSegment = (TH1F*)_file->Get("hist_liveSegment");
-        auto hist_liveSegment_Segment_z_DoubleFV = (TH1F*)_file->Get("hist_liveSegment_Segment_z_DoubleFV");
 
         int segmentAllEvent  = 0,
             segmentDoubleCut = 0;
 
         for (int i = 0; i < 154; i++){
             if (hist_liveSegment->GetBinContent(i)) segmentAllEvent++;
-            if (hist_liveSegment_Segment_z_DoubleFV->GetBinContent(i)) segmentDoubleCut++;
         }
+
+        segmentDoubleCut = segmentAllEvent - 84;
 
         // scale = Hz / MeV / kg
         float totalRunTime   = 79253.3,
-              binWidth       = 0.025,
+              binWidth       = 0.05,
               scaleAllEvent  = 1 / (totalRunTime * binWidth * segmentAllEvent * 24.2),
               scaleDoubleCut = 1 / (totalRunTime * binWidth * segmentDoubleCut * (40/117.8) * 24.2);
     /* }}} */
@@ -114,7 +114,7 @@ void getPlot(char* rootFile){
     hist_EnergyPerEvent->GetYaxis()->CenterTitle(kTRUE);
     hist_EnergyPerEvent->GetYaxis()->SetLabelSize(0.03);
 
-    //hist_EnergyPerEvent->GetXaxis()->SetRangeUser(0, 2);
+    hist_EnergyPerEvent->GetXaxis()->SetRangeUser(0.5, 10);
     hist_EnergyPerEvent->GetXaxis()->SetTitle("Energy [MeV]");
     hist_EnergyPerEvent->GetXaxis()->SetTitleSize(0.03);
     hist_EnergyPerEvent->GetXaxis()->CenterTitle(kTRUE);

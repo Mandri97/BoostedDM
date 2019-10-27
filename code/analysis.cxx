@@ -105,7 +105,6 @@ TH1F* hist_PSD_Energy[10];
 
 // count
 auto hist_liveSegment                       = new TH1F("hist_liveSegment",                    "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
-auto hist_liveSegment_Segment_z_DoubleFV    = new TH1F("hist_liveSegment_Segment_z_DoubleFV", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
 /* }}} */
 
@@ -281,7 +280,6 @@ void analysis(char* filename, char* outname){ // {{{
     for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
 
     hist_liveSegment->Write();
-    hist_liveSegment_Segment_z_DoubleFV->Write();
 
     outFile->Close();
 
@@ -350,12 +348,12 @@ void CutEvents (Events *events){
 
     cutEvent->Run();
 
-    deadTimeRnPo_d += cutEvent->RnPoDeadTime();
-    deadTimeBiPo_d += cutEvent->BiPoDeadTime();
-    deadTimeNeutronRecoil += cutEvent->NeutronAdjacentDeadTime(4);
-    deadTimeNLi += cutEvent->NeutronAdjacentDeadTime(6);
-    deadTimeMuon += cutEvent->MuonAdjacentDeadTime();
-    deadTimePile += cutEvent->PileUpDeadTime();
+    deadTimeRnPo_d = cutEvent->RnPoDeadTime();
+    deadTimeBiPo_d = cutEvent->BiPoDeadTime();
+    deadTimeNeutronRecoil = cutEvent->NeutronAdjacentDeadTime(4);
+    deadTimeNLi = cutEvent->NeutronAdjacentDeadTime(6);
+    deadTimeMuon = cutEvent->MuonAdjacentDeadTime();
+    deadTimePile = cutEvent->PileUpDeadTime();
         // Applying different cuts
         /*
         if (!isSinglePulseEvent) continue;
