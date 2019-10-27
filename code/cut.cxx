@@ -143,8 +143,11 @@ bool Cut::__RnPoDecayCut__(float time, float height){
         }
     }
 
-    if ((prevCorrelation && nextCorrelation) == false) RnPo_d += 2 * time;
-    return prevCorrelation && nextCorrelation;
+    bool returnValue = prevCorrelation && nextCorrelation;
+
+    if (!returnValue) RnPo_d += (2 * time);
+
+    return returnValue;
 }
 
 bool Cut::__BiPoDecayCut__(float time, float height){
@@ -189,7 +192,7 @@ bool Cut::__BiPoDecayCut__(float time, float height){
         } 
     }
 
-    if (prevCorrelation == false) BiPo_d += time;
+    if (!prevCorrelation) BiPo_d += time;
 
     return prevCorrelation;
 }
@@ -291,14 +294,15 @@ bool Cut::__NeutronAdjacentCut__ (float PID, float time){
         }
     }
     
-    // neutron recoil
-    if ((prevNeutronAdjacent && nextNeutronAdjacent) == false){
-        if (PID == 4) nRecoilAdjacent_d += 2 * time;
-        else if (PID == 6) nLiAdjacent_d += 2 * time;
-        else  neutronAdjacent_d += 2 * time;
+    bool returnValue = prevNeutronAdjacent && nextNeutronAdjacent;
+
+    if (!returnValue){
+        if (PID == 4) nRecoilAdjacent_d += (2 * time);
+        else if (PID == 6) nLiAdjacent_d += (2 * time);
+        else  neutronAdjacent_d += (2 * time);
     }
 
-    return prevNeutronAdjacent && nextNeutronAdjacent;
+    return returnValue;
 } // }}}
 
 bool Cut::__MuonAdjacentCut__ (float time){ // {{{
@@ -346,8 +350,11 @@ bool Cut::__MuonAdjacentCut__ (float time){ // {{{
         }
     }
 
-    if ((prevMuonAdjacent && nextMuonAdjacent) == false) muonAdjacent_d += 2 * time;
-    return prevMuonAdjacent && nextMuonAdjacent;
+    bool returnValue = prevMuonAdjacent && nextMuonAdjacent;
+
+    if (!returnValue) muonAdjacent_d += (2 * time);
+
+    return returnValue;
 } // }}} 
 
 bool Cut::__PileUpCut__ (float time){
@@ -379,9 +386,11 @@ bool Cut::__PileUpCut__ (float time){
         nextPileUp = timeWindow(pulseCandidate, temp->getPulse(0)) > time;
     }
 
-    if ((prevPileUp && nextPileUp) == false) pileUp_d += 2 * time;
+    bool returnValue = prevPileUp && nextPileUp;
+    
+    if (!returnValue) pileUp_d += (2 * time);
 
-    return prevPileUp && nextPileUp;
+    return returnValue;
 }
 
 void Cut::Run(){
