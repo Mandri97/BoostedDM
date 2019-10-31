@@ -62,7 +62,7 @@ class Cut {
         float NeutronAdjacentDeadTime(int PID);
         float MuonAdjacentDeadTime();
         float PileUpDeadTime();
-        TH1F *GetLiveSegment();
+        TH1F *GetLiveSegment(const char *name);
 
         void Run();
 

@@ -549,6 +549,6 @@ void Cut::addCut(const char* cutName, float arg1, float arg2, TH1F* histogram){
     cutsToBeApplied[rankCut - 1].arg2 = arg2;
 }
 
-TH1F* Cut::GetLiveSegment(){
-    return liveSegmentSignal;
+TH1F* Cut::GetLiveSegment(const char *name){
+    return (TH1F*)liveSegmentSignal->Clone(name);
 }

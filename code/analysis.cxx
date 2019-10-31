@@ -299,7 +299,7 @@ void CutEvents (Events *events){
     cutEvent->addCut("pileUp", 2, hist_Signal_PileUp_time2);
     cutEvent->addCut("RnPoDecay", 15000, 250, hist_Signal_RnPoCorrelatedDecay);
     cutEvent->addCut("BiPoDecay", 1200, 250, hist_Signal_BiPoCorrelatedDecay);
-    hist_SegmentRateSignal = cutEvent->GetLiveSegment();
+    hist_SegmentRateSignal = cutEvent->GetLiveSegment("hist_SegmentRateSignal");
 
     cutEvent->Run();
 
