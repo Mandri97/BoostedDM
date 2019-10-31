@@ -74,6 +74,9 @@ auto hist_default_PSD                        = new TH1F("hist_default_PSD", "Pot
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hist_custom_PSD                         = new TH1F("hist_custom_PSD", "Potential signals using custom PSD", 
                                                         NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hist_SegmentRateSignal                  = new TH1F("hist_SegmentRateSignal", "Signal segment rate",
+                                                        154, 0, 154);
+
 TH1F* hist_PSD_Energy[10];
 
 // count
@@ -236,6 +239,7 @@ void analysis(char* filename, char* outname){ // {{{
     hist_BetaDecay->Write();
     hist_EnergyPerEvent->Write();
     hist_SinglePulseEvent->Write();
+    hist_SegmentRateSignal->Write();
     hist_Signal_PileUp_time2->Write();
     hist_Signal_Segmet_z_DoubleFV->Write();
     hist_Signal_MuonAdjacent_time5->Write();
@@ -295,6 +299,7 @@ void CutEvents (Events *events){
     cutEvent->addCut("pileUp", 2, hist_Signal_PileUp_time2);
     cutEvent->addCut("RnPoDecay", 15000, 250, hist_Signal_RnPoCorrelatedDecay);
     cutEvent->addCut("BiPoDecay", 1200, 250, hist_Signal_BiPoCorrelatedDecay);
+    hist_SegmentRateSignal = cutEvent->GetLiveSegment();
 
     cutEvent->Run();
 

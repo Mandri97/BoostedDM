@@ -17,6 +17,7 @@ class Cut {
         Pulse_t* pulseCandidate;
 
         TH1F* histogramEvent;
+        TH1F* liveSegmentSignal;
 
         struct __args__ {
             int cutValue;
@@ -47,7 +48,7 @@ class Cut {
         bool __HeightCut__ (float height);
 
     public:
-        Cut(Events *events);
+        Cut(Events *events, TH1F* hist);
         ~Cut();
 
         // Add cut function
@@ -61,6 +62,7 @@ class Cut {
         float NeutronAdjacentDeadTime(int PID);
         float MuonAdjacentDeadTime();
         float PileUpDeadTime();
+        TH1F *GetLiveSegment();
 
         void Run();
 

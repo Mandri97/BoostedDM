@@ -460,6 +460,8 @@ void Cut::Run(){
             if (satisfyCut) histogram->Fill(currentEvent->getEnergyEvent());
             else break;
         }
+
+        if (satisfyCut) liveSegmentSignal->Fill(pulseCandidate->segment);
          
     }
 }
@@ -540,8 +542,12 @@ void Cut::addCut(const char* cutName, float arg1, TH1F* histogram){
     cutsToBeApplied[rankCut - 1].arg1 = arg1;
 }
 
- void Cut::addCut(const char* cutName, float arg1, float arg2, TH1F* histogram){
+void Cut::addCut(const char* cutName, float arg1, float arg2, TH1F* histogram){
     this->addCut(cutName, arg1, histogram);
 
     cutsToBeApplied[rankCut - 1].arg2 = arg2;
+}
+
+TH1F* Cut::GetLiveSegment(){
+    return liveSegmentSignal;
 }
