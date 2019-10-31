@@ -47,6 +47,8 @@ Cut::Cut(Events *data, TH1F* hist){
     events = data;
     histogramEvent = hist;
 
+    liveSegmentSignal = new TH1F("liveSegmentSignal", "", 154, 0, 154);
+
     currentEvent = nullptr;
     pulseCandidate = nullptr;
 
@@ -462,7 +464,6 @@ void Cut::Run(){
         }
 
         if (satisfyCut) liveSegmentSignal->Fill(pulseCandidate->segment);
-         
     }
 }
 
