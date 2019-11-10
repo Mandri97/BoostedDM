@@ -428,16 +428,15 @@ bool Event::NeutronPulseCut( int PID ){
     
     PSD_t psdEnergy = PSD_per_energy[iHist];
 
-    float nLiBandMin     = psdEnergy.nLiBand.mean     - psdEnergy.nLiBand.std;
-    float nLiBandMax     = psdEnergy.nLiBand.mean     + psdEnergy.nLiBand.std;
-    float neutronBandMin = psdEnergy.neutronBand.mean - psdEnergy.neutronBand.std;
-    float neutronBandMax = psdEnergy.neutronBand.mean + psdEnergy.neutronBand.std;
+    float nLiBandMin     = psdEnergy.nLiBand.mean     - 2 * psdEnergy.nLiBand.std;
+    float nLiBandMax     = psdEnergy.nLiBand.mean     + 2 * psdEnergy.nLiBand.std;
+    float neutronBandMin = psdEnergy.neutronBand.mean - 2 * psdEnergy.neutronBand.std;
+    float neutronBandMax = psdEnergy.neutronBand.mean + 2 * psdEnergy.neutronBand.std;
 
-    if (PID == 4){
-        return this->GetPulse( 0 )->PSD >= neutronBandMin && this->GetPulse( 0 )->PSD <= neutronBandMax;
-    } else {
-        return this->GetPulse( 0 )->PSD >= nLiBandMin  && this->GetPulse( 0 )->PSD <= nLiBandMax;
-    }
+    float pulsePSD = this->GetPulse( 0 )->PSD;
+
+    if (PID == 4) return pulsePSD >= neutronBandMin && pulsePSD <= neutronBandMax;
+    else          return pulsePSD >= nLiBandMin  && pulsePSD <= nLiBandMax;
 }
 
 double Event::RnPoCutDeadTime()           { return _RnPoDeadTime; }
