@@ -187,8 +187,6 @@ void analyzeRootFile(string rootFile){
 
     events->clear( );
 
-    delete events; 
-
     _file->Close( );
 }
 

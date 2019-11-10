@@ -78,7 +78,7 @@ Event::~Event(){
 }
 
 void Event::Initialize(){
-    pulses.clear();
+    if (pulses.size()) pulses.clear();
     energyEvent = 0.0;
 
     _hasNeutronRecoil = false;
