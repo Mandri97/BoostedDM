@@ -99,7 +99,7 @@ void analyzeRootFile(string rootFile){
 
     cout << "Processing " << rootFile << " ... \n";
 
-    vector<Event> *events;
+    vector<Event> *events = new vector<Event>;
 
     auto tree = (TTree*)_file->Get("PhysPulse");
 
@@ -200,12 +200,9 @@ inline void helper(char *programName){
 
 void analysis(char* filename, char* outname){ // {{{
 
-    ifstream textFile(filename);
-
-    string oneRootFile;
-
     // Consider root file separately
-    while (textFile >> oneRootFile) analyzeRootFile(oneRootFile);
+    //while (textFile >> oneRootFile) 
+    analyzeRootFile( string( filename ) );
 
     auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
