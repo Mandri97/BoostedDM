@@ -10,7 +10,7 @@ auto hLiveSegment = new TH1F("hLiveSegment", "Live segment", 154, 0, 154);
 
 void liveSegment(char *inFile, char *outFile){
     auto _inFile  = new TFile(inFile);
-    auto _outFile = new TFile(outFile, "recreate");
+    auto _outFile = new TFile(Form("%s.root", outFile), "recreate");
 
     auto tree = (TTree*) _inFile->Get("PhysPulse");
     int segment;
