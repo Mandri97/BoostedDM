@@ -60,6 +60,10 @@ TH1F* hist_PSD_Energy[10];
 // count
 auto hLiveSegment         = new TH1F("hLiveSegment",         "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentFiducial = new TH1F("hLiveSegmentFiducial", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal  = new TH1F("hLiveSegmentSignal",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal0  = new TH1F("hLiveSegmentSignal0",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal1  = new TH1F("hLiveSegmentSignal1",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+
 
 /* }}} */
 
@@ -136,7 +140,9 @@ void analyzeRootFile(string rootFile){
 
         // Skip (pretended) dead segments
         switch(t_segment){
-            case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
+            //case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
+            case 2: case 3: case 4: case 5: case 6: case 7: case 12: case 14: case 19: case 22: case 25:
+            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140:
                 continue;
 
                 break;
@@ -152,7 +158,8 @@ void analyzeRootFile(string rootFile){
             // substract total running time
             totalRunTime -= t_time;
         }else{
-            sameEvent = lastEventID == t_event;
+            if ( t_dtime > 20 ) sameEvent = false;
+            else sameEvent = lastEventID == t_event;
             lastEventID = t_event;
         }
 
@@ -217,6 +224,9 @@ void analysis(char* filename, char* outname){ // {{{
     hSignalCandidate->Write();
     hSinglePulseEvent->Write();
     hPulseCandidatePSD->Write();
+    hLiveSegmentSignal->Write();
+    hLiveSegmentSignal0->Write();
+    hLiveSegmentSignal1->Write();
     hLiveSegmentFiducial->Write();
 
     hPulseCandidateCustomPSD->Write();
@@ -226,7 +236,7 @@ void analysis(char* filename, char* outname){ // {{{
 
     outFile->Close();
 
-    totalRunTime = (totalRunTime - 18419.3) * 1e-9;
+    //totalRunTime = (totalRunTime - 18419.3) * 1e-9;
 
     cout << "Analysis finished.\n\n";
     cout << "**********************\n";
@@ -253,6 +263,10 @@ void CutEvents (vector<Event> *events){ // {{{
         if ( event->PileUpCut( iEvent, events, 2 ) )                              { hPileUp->Fill( energyEvent );
         if ( event->RnPoDecayCut( iEvent, events, 15000, 250 ) )                  { hRnPoDecay->Fill( energyEvent );
         if ( event->BiPoDecayCut( iEvent, events, 1200, 250 ) )                   { hBiPoDecay->Fill( energyEvent );
+                                                                                    hLiveSegmentSignal->Fill ( event->GetPulse( 0 )->segment );
+                                                                                    if (energyEvent >= 1) hLiveSegmentSignal1->Fill ( event->GetPulse( 0 )->segment );
+                                                                                    else if (energyEvent >= 0.7) hLiveSegmentSignal0->Fill ( event->GetPulse( 0 )->segment );
+
 
             }}}}}}}}}}
 } // }}}
