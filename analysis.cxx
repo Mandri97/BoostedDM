@@ -164,7 +164,7 @@ void analyzeRootFile(string rootFile){
         }
 
         // Store the previous event
-        if (!sameEvent){
+        if ( !sameEvent && oneEvent.GetNumberOfPulses() ){
             events->push_back(oneEvent);
             
             // reset
