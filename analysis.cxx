@@ -60,9 +60,11 @@ TH1F* hist_PSD_Energy[10];
 // count
 auto hLiveSegment         = new TH1F("hLiveSegment",         "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentFiducial = new TH1F("hLiveSegmentFiducial", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
-auto hLiveSegmentSignal  = new TH1F("hLiveSegmentSignal",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal   = new TH1F("hLiveSegmentSignal",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentSignal0  = new TH1F("hLiveSegmentSignal0",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentSignal1  = new TH1F("hLiveSegmentSignal1",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentNeutron  = new TH1F("hLiveSegmentNeutron",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentPileUp   = new TH1F("hLiveSegmentPileUp",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
 
 /* }}} */
@@ -142,7 +144,7 @@ void analyzeRootFile(string rootFile){
         switch(t_segment){
             //case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
             case 2: case 3: case 4: case 5: case 6: case 7: case 12: case 14: case 19: case 22: case 25:
-            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140: case 139
+            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140: case 139:
                 continue;
 
                 break;
@@ -223,10 +225,12 @@ void analysis(char* filename, char* outname){ // {{{
     hFiducialization->Write();
     hSignalCandidate->Write();
     hSinglePulseEvent->Write();
+    hLiveSegmentPileUp->Write();
     hPulseCandidatePSD->Write();
     hLiveSegmentSignal->Write();
     hLiveSegmentSignal0->Write();
     hLiveSegmentSignal1->Write();
+    hLiveSegmentNeutron->Write();
     hLiveSegmentFiducial->Write();
 
     hPulseCandidateCustomPSD->Write();
@@ -255,12 +259,14 @@ void CutEvents (vector<Event> *events){ // {{{
 
         if ( event->SinglePulseCut( ) )                                           { hSinglePulseEvent->Fill(energyEvent);
         if ( event->NeutronPulseCut( 4 ) || event->NeutronPulseCut( 6 ) )         { hSignalCandidate->Fill( energyEvent );
+                                                                                    hLiveSegmentNeutron->Fill( event->GetPulse( 0 )->segment );
         if ( event->FiducialCut() && abs ( event->GetPulse( 0 )->height )  < 200 ){ hFiducialization->Fill( energyEvent );
                                                                                     hLiveSegmentFiducial->Fill( event->GetPulse( 0 )->segment );
         if ( event->MuonAdjacentCut( iEvent, events, 5 ) )                        { hMuonAdjacent->Fill( energyEvent );
         if ( event->NeutronAdjacentCut( iEvent, events, 5, 4 ) )                  { hNeutronRecoil->Fill( energyEvent );
         if ( event->NeutronAdjacentCut( iEvent, events, 1000, 6 ) )               { hNeutronCapture->Fill( energyEvent );
         if ( event->PileUpCut( iEvent, events, 4 ) )                              { hPileUp->Fill( energyEvent );
+                                                                                    hLiveSegmentPileUp->Fill( event->GetPulse( 0 )->segment );
         if ( event->RnPoDecayCut( iEvent, events, 15000, 250 ) )                  { hRnPoDecay->Fill( energyEvent );
         if ( event->BiPoDecayCut( iEvent, events, 1200, 250 ) )                   { hBiPoDecay->Fill( energyEvent );
                                                                                     hLiveSegmentSignal->Fill ( event->GetPulse( 0 )->segment );
