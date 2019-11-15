@@ -13,7 +13,7 @@
 #include "event.hh"
 
 
-#define NBIN_ENERGY 400
+#define NBIN_ENERGY 50
 #define MIN_ENERGY 0
 #define MAX_ENERGY 10
 
@@ -49,7 +49,7 @@ auto hNeutronRecoil     = new TH1F("hNeutronRecoil",    "Neutron recoil veto, #p
 auto hNeutronCapture    = new TH1F("hNeutronCapture",   "NLi capture veto, #pm 1000 #mus",                     NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hRnPoDecay         = new TH1F("hRnPoDecay",        "Rn-Po correlated decay (#pm 25 cm & #pm 15000 #mus)", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hBiPoDecay         = new TH1F("hBiPoDecay",        "Bi-Po correlated decay (#pm 25 cm & - 1200 #mus)",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hPileUp            = new TH1F("hPileUp",           "Pile Up veto, #pm 2 ns",                              NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hPileUp            = new TH1F("hPileUp",           "Pile Up veto, #pm 4 ns",                              NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hPulseCandidatePSD = new TH1F("hPulseCandidatePSD","PSD value", 200, 0, 0.5);
 
 auto hPulseCandidateDefaultPSD = new TH1F("hPulseCandidateDefaultPSD", "Potential signals using default PSD", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
@@ -142,7 +142,7 @@ void analyzeRootFile(string rootFile){
         switch(t_segment){
             //case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
             case 2: case 3: case 4: case 5: case 6: case 7: case 12: case 14: case 19: case 22: case 25:
-            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140:
+            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140: case 139
                 continue;
 
                 break;
@@ -260,7 +260,7 @@ void CutEvents (vector<Event> *events){ // {{{
         if ( event->MuonAdjacentCut( iEvent, events, 5 ) )                        { hMuonAdjacent->Fill( energyEvent );
         if ( event->NeutronAdjacentCut( iEvent, events, 5, 4 ) )                  { hNeutronRecoil->Fill( energyEvent );
         if ( event->NeutronAdjacentCut( iEvent, events, 1000, 6 ) )               { hNeutronCapture->Fill( energyEvent );
-        if ( event->PileUpCut( iEvent, events, 2 ) )                              { hPileUp->Fill( energyEvent );
+        if ( event->PileUpCut( iEvent, events, 4 ) )                              { hPileUp->Fill( energyEvent );
         if ( event->RnPoDecayCut( iEvent, events, 15000, 250 ) )                  { hRnPoDecay->Fill( energyEvent );
         if ( event->BiPoDecayCut( iEvent, events, 1200, 250 ) )                   { hBiPoDecay->Fill( energyEvent );
                                                                                     hLiveSegmentSignal->Fill ( event->GetPulse( 0 )->segment );

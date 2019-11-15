@@ -143,8 +143,7 @@ bool Event::isBetaDecayEvent(){
 bool Event::FiducialCut (){
     int segment = this->GetPulse(0)->segment;
 
-    return ((segment >= 30  && segment <= 39)  ||
-            (segment >= 44  && segment <= 53)  ||
+    return ((segment >= 44  && segment <= 53)  ||
             (segment >= 58  && segment <= 67)  ||
             (segment >= 72  && segment <= 81)  ||
             (segment >= 86  && segment <= 95)  ||
@@ -422,7 +421,7 @@ bool Event::NeutronPulseCut( int PID ){
     float energyEvent = this->GetEnergyEvent( );
 
     int iHist = -1;
-    if ( energyEvent < 10 && energyEvent > 0 ) iHist = (int) energyEvent;
+    if ( energyEvent < 10 && energyEvent >= 0.5 ) iHist = (int) energyEvent;
 
     if (iHist == -1 ) return false;
     
