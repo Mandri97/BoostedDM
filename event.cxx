@@ -146,7 +146,7 @@ bool Event::FiducialCut (){
     int segX = segment % 14,
         segY = segment / 14;
 
-    return ((segX > 1 && segX < 12) && (segY > 2 && segY < 10));
+    return ((segX >= 2 && segX <= 11) && (segY >= 3 && segY <= 8));
 }
 
 bool Event::HeightCut (float height){
