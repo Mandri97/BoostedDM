@@ -142,13 +142,11 @@ bool Event::isBetaDecayEvent(){
 
 bool Event::FiducialCut (){
     int segment = this->GetPulse(0)->segment;
+    
+    int segX = segment % 14,
+        segY = segment / 14;
 
-    return ((segment >= 44  && segment <= 53)  ||
-            (segment >= 58  && segment <= 67)  ||
-            (segment >= 72  && segment <= 81)  ||
-            (segment >= 86  && segment <= 95)  ||
-            (segment >= 100 && segment <= 109) ||
-            (segment >= 114 && segment <= 123) );
+    return ((segX > 1 && segX < 12) && (segY > 2 && segY < 10));
 }
 
 bool Event::HeightCut (float height){
