@@ -142,9 +142,8 @@ void analyzeRootFile(string rootFile){
 
         // Skip (pretended) dead segments
         switch(t_segment){
-            //case 2: case 4: case 6: case 11: case 13: case 18: case 21: case 32: case 44: case 79:
-            case 2: case 3: case 4: case 5: case 6: case 7: case 12: case 14: case 19: case 22: case 25:
-            case 33: case 45: case 69: case 80: case 103: case 123: case 128: case 140: case 139:
+            case 1: case 2: case 3: case 4: case 5: case 6: case 11: case 13: case 18: case 21: case 24:
+            case 32: case 44: case 68: case 79: case 102: case 122: case 139:
                 continue;
 
                 break;
