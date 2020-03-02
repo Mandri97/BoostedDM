@@ -53,8 +53,9 @@ auto hPileUp            = new TH1F("hPileUp",           "Pile Up veto, #pm 4 ns"
 auto hPulseCandidatePSD = new TH1F("hPulseCandidatePSD","PSD value", 200, 0, 0.5);
 
 auto hPulseCandidateDefaultPSD = new TH1F("hPulseCandidateDefaultPSD", "Potential signals using default PSD", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hPulseCandidateCustomPSD  = new TH1F("hPulseCandidateCustomPSD", "Potential signals using custom PSD", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hPulseCandidateCustomPSD  = new TH1F("hPulseCandidateCustomPSD",  "Potential signals using custom PSD",  NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 
+// TODO: Change cuts before filling this histogram
 TH1F* hist_PSD_Energy[10];
 
 // count
@@ -68,13 +69,6 @@ auto hLiveSegmentPileUp   = new TH1F("hLiveSegmentPileUp",   "", NBIN_SEGMENT, M
 
 
 /* }}} */
-
-
-/* Count variables {{{ */
-
-long double totalRunTime = 0.0;
- 
- /* }}} */
 
 int main(int argc, char* argv[]){
     // Check for argument 
@@ -109,6 +103,12 @@ void analyzeRootFile(string rootFile){
 
     auto tree = (TTree*)_file->Get("PhysPulse");
 
+    if (tree == NULL){
+	_file->Close();
+	return ;
+    }
+
+
     /* Declare variables for branches */
     Long64_t t_event;           // Keep track of events
     int      t_PID,             // PID
@@ -142,8 +142,9 @@ void analyzeRootFile(string rootFile){
 
         // Skip (pretended) dead segments
         switch(t_segment){
-            case 1: case 2: case 3: case 4: case 5: case 6: case 11: case 13: case 18: case 21: case 24:
-            case 32: case 44: case 68: case 79: case 102: case 122: case 139:
+	    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 9: case 11: case 13: case 18: case 21:
+            case 23: case 24: case 27: case 32: case 40: case 44: case 68: case 73: case 79: case 102: case 107:
+            case 122: case 127: case 130: case 139:
                 continue;
 
                 break;
@@ -155,12 +156,10 @@ void analyzeRootFile(string rootFile){
         if (!ientry){
             lastEventID = t_event;
             sameEvent = true;
-
-            // substract total running time
-            totalRunTime -= t_time;
         }else{
             if ( t_dtime > 20 ) sameEvent = false;
             else sameEvent = lastEventID == t_event;
+
             lastEventID = t_event;
         }
 
@@ -188,8 +187,6 @@ void analyzeRootFile(string rootFile){
     }
 
     events->push_back(oneEvent);
-
-    totalRunTime += t_time;
 
     CutEvents( events );
 
@@ -235,16 +232,11 @@ void analysis(char* filename, char* outname){ // {{{
     hPulseCandidateCustomPSD->Write();
     hPulseCandidateDefaultPSD->Write();
 
-    for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
+    //for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
 
     outFile->Close();
 
-    //totalRunTime = (totalRunTime - 18419.3) * 1e-9;
-
     cout << "Analysis finished.\n\n";
-    cout << "**********************\n";
-    cout << "Total running time: " << totalRunTime << " s\n";
-
 } //}}}
 
 

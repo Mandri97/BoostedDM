@@ -9,11 +9,15 @@ using namespace std;
 
 double runingTime = 0.0;
 
-
 void totalRunningTime(string fileName){
-    auto _file = new TFile(fileName);
+    auto _file = new TFile(fileName.c_str());
 
-    runingTime += ((TVectorT<double>*) _file->Get("runtime"))->Max();
+    if (!_file->GetNkeys()) {
+	_file->Close();
+	return;
+    }
+
+    runingTime += (double) ((TVectorT<double>*) _file->Get("runtime"))->Max();
 
     _file->Close();
 }
@@ -25,6 +29,6 @@ int main(int argc, char *argv[]){
 
     while (_textFile >> file) totalRunningTime(file);
 
-    cout << "Total running time: " << runingTime << " s, " << runingTime / (60 * 60) << " h" << endl;    
+    cout << setprecision(20) << "Total running time: " << runingTime << " s, " << runingTime / (60 * 60) << " h" << endl;    
     _textFile.close();
 }

@@ -436,6 +436,7 @@ bool Event::NeutronPulseCut( int PID ){
     else          return pulsePSD >= nLiBandMin  && pulsePSD <= nLiBandMax;
 }
 
+// DO NOT USE THESE FUNCTION
 double Event::RnPoCutDeadTime()           { return _RnPoDeadTime; }
 double Event::BiPCutoDeadTime()           { return _BiPoDeadTime; }
 double Event::PileUpCutDeadTime()         { return _PileUpDeadTime; }
