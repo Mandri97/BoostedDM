@@ -265,7 +265,7 @@ bool Event::MuonVeto (int iEvent, std::vector<Event> *allEvents, double time){
     return SearchEventInTime(iEvent, allEvents, -time, 15);
 }
 
-bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, double time){
+bool Event::PileUpVeto(int iEvent, std::vector<Event> *allEvents, double time){
     /* Check if there is any event within @time microseconds
      * @param:
      *        - iEvent: index of the current event in @allEvents

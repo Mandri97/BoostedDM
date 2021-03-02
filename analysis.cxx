@@ -57,7 +57,7 @@ auto hLiveSegmentSignal   = new TH1F("hLiveSegmentSignal",   "", NBIN_SEGMENT, M
 
 // TTrees
 auto tSelectedEvents =  new TTree("tSelectedEvents", "");
-auto tCountEvents    =  new TTree("tCountEvents" "");
+auto tCountEvents    =  new TTree("tCountEvents", "");
 
 int tSeg = 0,
     tMuonCounts = 0,
@@ -265,16 +265,16 @@ void CutEvents (vector<Event> *events){
 		    hFiducialization->Fill(energyEvent);
 		    hLiveSegmentFiducial->Fill(event->GetPulse(0)->segment);
 
-		    if (event->MuonVeto(iEvent, events, 5){
+		    if (event->MuonVeto(iEvent, events, 5)){
 			hMuonAdjacent->Fill(energyEvent);
 
-			if (event->Recoil(iEvent, events, 5){
+			if (event->RecoilVeto(iEvent, events, 5)){
 			    hNeutronRecoil->Fill(energyEvent);
 
-			    if (event->CaptureVeto(iEvent, events, 500){
+			    if (event->CaptureVeto(iEvent, events, 500)){
 				hNeutronCapture->Fill(energyEvent);
 
-				if (event->PileUpCut(iEvent, events, 2){
+				if (event->PileUpVeto(iEvent, events, 2)){
 				    hPileUp->Fill(energyEvent);
 				    hLiveSegmentSignal->Fill(event->GetPulse(0)->segment);
 
