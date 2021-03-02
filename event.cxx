@@ -4,15 +4,15 @@
 using namespace std;
 
 struct Statistics_t {
-    float mean,
-          std;
+    double mean,
+           std;
 };
 
 
 struct PSD_t {
     Statistics_t gammaBand,
-                 neutronBand,
-                 nLiBand;
+                 protonBand,
+                 nucleusBand;
 };
 
 // Single pulse + Height (55 cm) + PileUp 2 us
@@ -30,18 +30,9 @@ PSD_t PSD_per_energy[10] = {
 };
 
 
-double Event::_RnPoDeadTime = 0.0;
-double Event::_BiPoDeadTime = 0.0;
-double Event::_PileUpDeadTime = 0.0;
-double Event::_MuonAdjacentDeadTime = 0.0;
-double Event::_NeutronRecoilDeadTime = 0.0;
-double Event::_NeutronCaptureDeadTime = 0.0;
-
-
 /* class Pulse_t {{{ */
-Pulse_t::Pulse_t(int seg,  int PID,
-                float h,  float E, float t,
-                float dt, float PSD){
+Pulse_t::Pulse_t(int seg,  int PID,  double h,  
+		 double E, double t, double dt, double PSD){
 
     PSD = PSD;  PID = PID; height = h;
     energy = E; time = t;  dtime = dt;
@@ -52,15 +43,13 @@ Pulse_t::Pulse_t( ){}
 
 Pulse_t::~Pulse_t( ){}
 
-float Pulse_t::TimeWindow (Pulse_t *a){
+double Pulse_t::TimeWindow (Pulse_t *a){
     // return the time difference in microseconds between 2 pulses
-    
     return abs(a->time - this->time) * 1e-3;
 } 
 
-float Pulse_t::HeightDifference (Pulse_t *a){
+double Pulse_t::HeightDifference (Pulse_t *a){
     // return the height difference in mm between 2 pulses
-
     return abs(a->height - this->height);
 }
 
@@ -78,19 +67,87 @@ Event::~Event(){
 }
 
 void Event::Initialize(){
-    if (pulses.size()) pulses.clear();
+    pulses.clear();
     energyEvent = 0.0;
 
-    _hasNeutronRecoil = false;
-    _hasNeutronCapture = false;
-    _isGammaEvent = true;
+    hasNeutronRecoil = false;
+    hasNeutronCapture = false;
+    isGammaEvent = true;
+    isMuonEvent = false;
+}
+
+
+// time of event is the median pulse
+// 
+//
+bool Event::SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double time , double minE, int PID = -1){
+    auto currentEvent = &allEvents->at(iEvent);
+
+    assert (currentEvent->IsSinglePulse());
+
+    double currentPulseTime = currentEvent->GetPulse(0)->time;
+
+    int offset = time < 0 ? -1 : 1;
+
+    time = abs(time);
+
+    long int i = iEvent + offset;
+
+    bool foundPulse = false,
+	 timeRequirement = false,
+	 energyRequirement = false,
+	 PIDRequirement = false;
+
+    
+    for ( long int i = iEvent + offset, j = allEvents->size();; i += offset ){
+	// Limit reached
+	if (i == 0 || i == j) return true;
+
+	auto temp = &allEvents->at(i);	
+	
+	// Energy requirement
+	energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
+
+	if (!energyRequirement) continue;
+
+	double tempEventTime;
+
+	// PID and time requirements
+	if ( PID == -1 ){
+	    PIDRequirement = true;
+
+	    // time is the median
+	    int size = temp->GetNumberOfPulses();
+
+	    if (size % 2 == 0) 
+		tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
+	    else 
+		tempEventTime = temp->GetPulse(size / 2)->time;
+	} else {
+	    PIDRequirement = temp->IsSinglePulse() == PID ? true : false;
+
+	    tempEventTime = temp->GetPulse(0)->time;
+	}
+
+	if (!PIDRequirement) continue;
+
+	// Time requirement
+	timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
+
+	if (timeRequirement) return true;
+	else {
+	   foundPulse = PIDRequirement && energyRequirement;
+
+	   if (foundPulse) return false;
+	}
+    }
 }
 
 int Event::GetNumberOfPulses(){
     return pulses.size();
 }
 
-float Event::GetEnergyEvent(){
+double Event::GetEnergyEvent(){
     return energyEvent;
 }
 
@@ -107,14 +164,16 @@ void Event::AddPulse(Pulse_t pulse){
     // Update energyEvent
     energyEvent += pulse.energy;
 
-    // Check if it is a beta decay
-    _isGammaEvent = _isGammaEvent && pulse.PID == 1;
+    if (energyEvent > 15) isMuonEvent = true;
 
-    if (pulse.PID == 4) _hasNeutronRecoil = true;
-    if (pulse.PID == 6) _hasNeutronCapture = true;
+    // Check if it is a beta decay
+    isGammaEvent = isGammaEvent && pulse.PID == 1;
+
+    if (pulse.PID == 4) hasNeutronRecoil = true;
+    if (pulse.PID == 6) hasNeutronCapture = true;
 }
 
-int Event::isSinglePulse(){
+int Event::IsSinglePulse(){
     /* Determine if the event is a single pulse
      * 
      * Return:
@@ -128,16 +187,51 @@ int Event::isSinglePulse(){
     else return pulses.at(0).PID;
 }
 
-bool Event::hasNeutronRecoil(){
-    return _hasNeutronRecoil;
+bool Event::SinglePulseCut( ){ return this->IsSinglePulse() != 0; }
+
+bool Event::NeutronCut(){
+
+    if ( !this->SinglePulseCut( ) ) return false;
+
+    double energyEvent = this->GetEnergyEvent( );
+
+    int iHist = -1;
+    if ( energyEvent < 10 && energyEvent >= 0.5 ) iHist = (int) energyEvent;
+
+    if (iHist == -1 ) return false;
+    
+    PSD_t psdEnergy = PSD_per_energy[iHist];
+
+    double neutronBandMin = psdEnergy.protonBand.mean - 2 * psdEnergy.protonBand.std;
+    double neutronBandMax = psdEnergy.protonBand.mean + 2 * psdEnergy.protonBand.std;
+
+    double pulsePSD = this->GetPulse( 0 )->PSD;
+
+   return pulsePSD >= neutronBandMin && pulsePSD <= neutronBandMax;
 }
 
-bool Event::hasNeutronCapture(){
-    return _hasNeutronCapture;
+bool Event::HasNeutronRecoil(){
+    return hasNeutronRecoil;
 }
 
-bool Event::isBetaDecayEvent(){
-    return _isGammaEvent && this->isSinglePulse() == 0;
+bool Event::HasNeutronCapture(){
+    return hasNeutronCapture;
+}
+
+bool Event::IsBetaDecayEvent(){
+    return isGammaEvent && this->IsSinglePulse() == 0;
+}
+
+bool Event::IsMuonEvent(){
+    return isMuonEvent;
+}
+
+bool Event::IsCaptureEvent(){
+    return hasNeutronCapture && this->IsSinglePulse() == 6;
+}
+
+bool Event::IsRecoilEvent(){
+    return hasNeutronRecoil && this->IsSinglePulse() == 4;
 }
 
 bool Event::FiducialCut (){
@@ -149,11 +243,11 @@ bool Event::FiducialCut (){
     return ((segX >= 2 && segX <= 11) && (segY >= 3 && segY <= 8));
 }
 
-bool Event::HeightCut (float height){
+bool Event::HeightCut (double height){
     return abs(this->GetPulse(0)->height) < height;
 }
 
-bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float time){
+bool Event::MuonVeto (int iEvent, std::vector<Event> *allEvents, double time){
     /* Check if here is a muon event adjacent to the pulse within a certain time interval
      * @param:
      *        - iEvent: index of the current event
@@ -165,44 +259,13 @@ bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float ti
      *        - false if there is a muon adjacent within @time us
      */
 
-    bool prevEvent = true;
-    for (long int iPrev = iEvent - 1; iPrev >= 0; iPrev--){
-        
-        Event *temp = &allEvents->at(iPrev);
-
-        // Energy requirement
-        if (temp->GetEnergyEvent() > 15){
-
-            prevEvent =
-                this->GetPulse(0)->TimeWindow(temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
-
-            break;
-        }
-    }
-
-
-    bool nextEvent = true;
-    for (long int iNext = iEvent + 1, iMax = allEvents->size(); iNext < iMax; iNext++){
-
-        Event *temp = &allEvents->at(iNext);
-
-        // Energy requirement
-        if (temp->GetEnergyEvent() > 15){
-
-            nextEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(0)) > time;
-
-            break;
-        }
-    }
-
-
-    bool returnValue = prevEvent && nextEvent;
-    if (!returnValue) _MuonAdjacentDeadTime += (2 * time);
-
-    return returnValue;
+    // Look for muon events before signal
+    // The neutron single pulse event is likely 
+    // to be create by muon events
+    return SearchEventInTime(iEvent, allEvents, -time, 15);
 }
 
-bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
+bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, double time){
     /* Check if there is any event within @time microseconds
      * @param:
      *        - iEvent: index of the current event in @allEvents
@@ -212,109 +275,27 @@ bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
      *        - true: if no event adjacent to the current event within @time microseconds
      *        - false: otherwise
      */
-    long int iPrev = iEvent - 1;
-    bool prevEvent = true;
+    bool prevEvent = SearchEventInTime(iEvent, allEvents, -time, 0);
+    bool nextEvent = SearchEventInTime(iEvent, allEvents, +time, 0);
 
-    if (iPrev > -1){
-        Event *temp = &allEvents->at(iPrev);
-
-        prevEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
-    }
-
-
-    long int iNext = iEvent + 1;
-    bool nextEvent = true;
-
-    if ( iNext < allEvents->size( ) ){
-        Event *temp = &allEvents->at(iNext);
-
-        nextEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(0)) > time;
-    }
-
-
-    bool returnValue = prevEvent && nextEvent;
-    if (!returnValue) _PileUpDeadTime += ( 2 * time );
-
-    return returnValue;
+    return prevEvent && nextEvent;
 }
 
+bool Event::RecoilVeto(int iEvent, std::vector<Event> *allEvents, double time){
+    bool prevEvent = SearchEventInTime(iEvent, allEvents, -time, 0, 4);
+    bool nextEvent = SearchEventInTime(iEvent, allEvents, +time, 0, 4);
 
-bool Event::NeutronAdjacentCut (int iEvent, std::vector<Event> *allEvents, float time, int PID){
-    /* Check if there is a neutron event adjacent to the pulse within certain time interval 
-     *
-     * @param:
-     *        - iEvent: index of the current event in @allEvents
-     *        - allEvents: all events in the root file
-     *        - PID: PID of the neutron signature (4: neutron recoil, 6 nLi capture)
-     *        - time: time interval
-     *
-     * @return:
-     *        - true: if no neutron adjacent (PID requirement) within @time us
-     *        - false; if there is a neutron adjancet (PID requirement) within @time us
-     */
-    bool prevEvent = true;
-    for (long int iPrev = iEvent - 1 ; iPrev >= 0; iPrev--){
-        
-        Event *temp = &allEvents->at(iPrev);
-
-        if (PID == 4){
-            // Looking for event containing neutron recoil
-            if (temp->hasNeutronRecoil()){
-                prevEvent =
-                    ( this->GetPulse( 0 ) )->TimeWindow( temp->GetPulse(temp->GetNumberOfPulses() - 1) )
-                        > time;
-                break;
-            }
-        } else if (PID == 6){
-            // Looking for event containing nLi capture
-            if (temp->hasNeutronCapture()){
-                prevEvent =
-                    this->GetPulse(0)->TimeWindow( temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
-                break;
-            }
-        } else {
-            prevEvent =
-                this->GetPulse(0)->TimeWindow( temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
-            break;
-        }
-    }
-
-
-    bool nextEvent = true;
-    for (long int iNext = iEvent + 1, iMax = allEvents->size(); iNext < iMax; iNext++){
-
-        Event *temp = &allEvents->at(iNext);
-
-        if (PID == 4){
-            // Looking for event containing neutron recoil
-            if (temp->hasNeutronRecoil()){
-                nextEvent = this->GetPulse(0)->TimeWindow( temp->GetPulse(0)) > time;
-                break;
-            }
-        }else if (PID == 6){
-            // Looking for event containing nLi capture
-            if (temp->hasNeutronCapture()){
-                nextEvent = this->GetPulse(0)->TimeWindow( temp->GetPulse(0)) > time;
-                break;
-            }
-        } else {
-            nextEvent = this->GetPulse(0)->TimeWindow( temp->GetPulse(0)) > time;
-            break;
-        }
-    }
-    
-    bool returnValue =  prevEvent && nextEvent;
-
-    if(!returnValue) {
-        if (PID == 4) _NeutronRecoilDeadTime  += ( 2 * time );
-        else          _NeutronCaptureDeadTime += ( 2 * time );
-    }
-
-    return returnValue;
+    return prevEvent && nextEvent;
 }
 
-bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, float height){
+bool Event::CaptureVeto(int iEvent, std::vector<Event> *allEvents, double time){
+    return SearchEventInTime(iEvent, allEvents, +time, 0, 6);
+}
 
+// TODO: Broken function - DO NOT USE
+bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, double time, double height){
+    return false;
+    /*
     Pulse_t *signalCandidate = this->GetPulse(0);
     
     bool prevEvent = true;
@@ -322,7 +303,7 @@ bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, 
         Event *temp = &allEvents->at(iPrev);
 
         // single pulse neutron recoil
-        if ( temp->isSinglePulse( ) == 4 ){
+        if ( temp->IsSinglePulse( ) == 4 ){
             Pulse_t* prevPulse = temp->GetPulse ( 0 );
 
             if ( signalCandidate->TimeWindow( prevPulse ) < time){
@@ -341,7 +322,7 @@ bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, 
         Event *temp = &allEvents->at(iNext);
 
         // single pulse neutron recoil
-        if (temp->isSinglePulse ( ) == 4){
+        if (temp->IsSinglePulse ( ) == 4){
             Pulse_t* nextPulse = temp->GetPulse( 0 );
 
             if (signalCandidate->TimeWindow( nextPulse ) < time){
@@ -355,13 +336,19 @@ bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, 
     }
 
     bool returnValue = prevEvent && nextEvent;
-    if ( !returnValue ) _RnPoDeadTime += ( 2 * time );
     
     return returnValue;
+    */
 }
 
 
-bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, float time, float height ){
+// TODO: Broken function - DO NOT USE
+bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, double time, double height ){
+    return false;
+
+    /*
+    assert(false);
+
     Pulse_t* signalCandidate = this->GetPulse(0);
     
     bool prevEvent = true,
@@ -403,45 +390,8 @@ bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, float time,
         } 
     }
 
-    if (!prevEvent) _BiPoDeadTime += time;
-
     return prevEvent;
+    */
 }
-
-bool Event::SinglePulseCut( ){ return this->isSinglePulse() != 0; }
-
-bool Event::NeutronPulseCut( int PID ){
-
-    assert ( PID == 4 || PID == 6 );
-
-    if ( !this->SinglePulseCut( ) ) return false;
-
-    float energyEvent = this->GetEnergyEvent( );
-
-    int iHist = -1;
-    if ( energyEvent < 10 && energyEvent >= 0.5 ) iHist = (int) energyEvent;
-
-    if (iHist == -1 ) return false;
-    
-    PSD_t psdEnergy = PSD_per_energy[iHist];
-
-    float nLiBandMin     = psdEnergy.nLiBand.mean     - 2 * psdEnergy.nLiBand.std;
-    float nLiBandMax     = psdEnergy.nLiBand.mean     + 2 * psdEnergy.nLiBand.std;
-    float neutronBandMin = psdEnergy.neutronBand.mean - 2 * psdEnergy.neutronBand.std;
-    float neutronBandMax = psdEnergy.neutronBand.mean + 2 * psdEnergy.neutronBand.std;
-
-    float pulsePSD = this->GetPulse( 0 )->PSD;
-
-    if (PID == 4) return pulsePSD >= neutronBandMin && pulsePSD <= neutronBandMax;
-    else          return pulsePSD >= nLiBandMin  && pulsePSD <= nLiBandMax;
-}
-
-// DO NOT USE THESE FUNCTION
-double Event::RnPoCutDeadTime()           { return _RnPoDeadTime; }
-double Event::BiPCutoDeadTime()           { return _BiPoDeadTime; }
-double Event::PileUpCutDeadTime()         { return _PileUpDeadTime; }
-double Event::MuonAdjacentCutDeadTime()   { return _MuonAdjacentDeadTime; }
-double Event::NeutronRecoilCutDeadTime()  { return _NeutronRecoilDeadTime; }
-double Event::NeutronCaptureCutDeadTime() { return _NeutronCaptureDeadTime; }
 
 /* }}} */

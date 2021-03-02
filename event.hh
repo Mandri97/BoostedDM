@@ -1,6 +1,7 @@
 #include <vector>
 #include <cstdint>
 #include <assert.h>
+#include <cmath>
 
 #ifndef __EVENT_H_
 #define __EVENT_H_
@@ -9,42 +10,37 @@
 
 class Pulse_t {
     public:
-        Pulse_t(int seg,  int PID,
-                float h,  float E, float t,
-                float dt, float PSD);
+        Pulse_t(int seg,  int PID, double h,  
+		double E, double t, double dt, double PSD);
         Pulse_t();
         ~Pulse_t();
 
-        float TimeWindow(Pulse_t* a);
-        float HeightDifference(Pulse_t* a);
+        double TimeWindow(Pulse_t* a);
+        double HeightDifference(Pulse_t* a);
 
         int segment,
             PID;
 
-        float height,
-              energy,
-              time,
-              dtime,
-              PSD;
+        double height,
+               energy,
+               time,
+               dtime,
+                PSD;
 };
 
 /* class for one event */
 class Event {
     private:
         std::vector<Pulse_t> pulses;     // vector containing all pulses in one event
-        float energyEvent;               // energy of the event
+        double energyEvent;               // energy of the event
 
-        bool _hasNeutronRecoil,
-             _hasNeutronCapture,
-             _isGammaEvent;
+        bool hasNeutronRecoil,
+             hasNeutronCapture;
 
-        // Dead Time
-        double static _RnPoDeadTime,
-                      _BiPoDeadTime,
-                      _PileUpDeadTime,
-                      _MuonAdjacentDeadTime,
-                      _NeutronRecoilDeadTime,
-                      _NeutronCaptureDeadTime;
+	bool isMuonEvent,
+             isGammaEvent;
+
+	bool SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double time, double minE, int PID);
 
     public:
         Event();
@@ -53,37 +49,34 @@ class Event {
         void Initialize();
 
         int      GetNumberOfPulses( );
-        float    GetEnergyEvent( );
-        double   RnPoCutDeadTime( );
-        double   BiPCutoDeadTime( );
-        double   PileUpCutDeadTime( );
-        double   MuonAdjacentCutDeadTime( );
-        double   NeutronRecoilCutDeadTime( );
-        double   NeutronCaptureCutDeadTime( );
-
+        double   GetEnergyEvent( );
 
         Pulse_t* GetPulse(int iPulse);
 
-
         void AddPulse(Pulse_t pulse);
 
-
-        int  isSinglePulse();
-        bool hasNeutronRecoil();
-        bool hasNeutronCapture();
-        bool isBetaDecayEvent();
+        int  IsSinglePulse();
+        bool HasNeutronRecoil();
+        bool HasNeutronCapture();
+        bool IsBetaDecayEvent();
+	bool IsMuonEvent();
+	bool IsGammaEvent();
+	bool IsRecoilEvent();
+	bool IsCaptureEvent();
 
 
         // Cuts
-        bool FiducialCut        ( );
-        bool SinglePulseCut     ( );
-        bool NeutronPulseCut    ( int PID );
-        bool HeightCut          ( float height );
-        bool MuonAdjacentCut    ( int iEvent, std::vector<Event> *allEvents, float time );
-        bool PileUpCut          ( int iEvent, std::vector<Event> *allEvents, float time );
-        bool NeutronAdjacentCut ( int iEvent, std::vector<Event> *allEvents, float time, int PID );
-        bool RnPoDecayCut       ( int iEvent, std::vector<Event> *allEvents, float time, float height );
-        bool BiPoDecayCut       ( int iEvent, std::vector<Event> *allEvents, float time, float height );
+        bool FiducialCut    ( );
+        bool SinglePulseCut ( );
+        bool NeutronCut     ( );
+        bool HeightCut      ( double height );
+        bool MuonVeto       ( int iEvent, std::vector<Event> *allEvents, double time );
+        bool PileUpVeto     ( int iEvent, std::vector<Event> *allEvents, double time );
+	bool RecoilVeto     ( int iEvent, std::vector<Event> *allEvents, double time);
+	bool CaptureVeto    ( int iEvent, std::vector<Event> *allEvents, double time);
+	// Broken function
+        bool RnPoDecayCut   ( int iEvent, std::vector<Event> *allEvents, double time, double height );
+        bool BiPoDecayCut   ( int iEvent, std::vector<Event> *allEvents, double time, double height );
 };
 
 #endif 
