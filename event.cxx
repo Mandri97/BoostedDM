@@ -16,6 +16,7 @@ struct PSD_t {
 };
 
 // Single pulse + Height (55 cm) + PileUp 2 us
+/* Old parameters 1 MeV interval
 PSD_t PSD_per_energy[10] = {
     { {0.1444, 0.01403}, {0.2429, 0.02336}, {0.2638, 0.01653} },       // Energy: 0.7 - 1 MeV
     { {0.1435, 0.01143}, {0.2202, 0.01755}, {0.2573, 0.01438} },       // Energy: 1 - 2 MeV 
@@ -28,7 +29,16 @@ PSD_t PSD_per_energy[10] = {
     { {0.1384, 0.00611}, {0.1802, 0.01021}, {0.2180, 0.02036} },       // Energy: 8 - 9 MeV
     { {0.1383, 0.00593}, {0.1780, 0.01008}, {0.2116, 0.02357} }        // Energy: 9 - 10 MeV
 };
+*/
 
+// New PSD parameters 0.5 MeV interval
+Statistics_t protonRecoil[27] = {{2.608e-1, 2.094e-2}, {2.156e-1, 1.541e-2}, {2.143e-1, 1.450e-2}, {2.087e-1, 1.325e-2},
+				    			 {2.040e-1, 1.291e-2}, {2.011e-1, 1.510e-2}, {1.978e-1, 1.393e-2}, {1.952e-1, 1.340e-2},
+				    			 {1.921e-1, 1.283e-2}, {1.900e-1, 1.268e-2}, {1.867e-1, 1.077e-2}, {1.853e-1, 1.087e-2},
+				    			 {1.839e-1, 1.024e-2}, {1.838e-1, 1.172e-2}, {1.812e-1, 9.326e-3}, {1.796e-1, 9.306e-3},
+				    			 {1.794e-1, 9.251e-3}, {1.787e-1, 9.301e-3}, {1.785e-1, 1.016e-2}, {1.766e-1, 8.876e-3},
+				    			 {1.774e-1, 8.946e-3}, {1.759e-1, 9.287e-3}, {1.753e-1, 9.768e-3}, {1.741e-1, 1.104e-2},
+				    			 {1.736e-1, 1.101e-2}, {1.722e-1, 1.272e-2}, {1.679e-1, 1.486e-2}};
 
 /* class Pulse_t {{{ */
 Pulse_t::Pulse_t(int seg,  int PID,  double h,  
@@ -100,46 +110,42 @@ bool Event::SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double
 
     
     for ( long int i = iEvent + offset, j = allEvents->size();; i += offset ){
-	// Limit reached
-	if (i == 0 || i == j) return true;
+		// Limit reached
+		if (i == 0 || i == j) return true;
 
-	auto temp = &allEvents->at(i);	
-	
-	// Energy requirement
-	energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
+		auto temp = &allEvents->at(i);	
+		
+		// Energy requirement
+		energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
 
-	if (!energyRequirement) continue;
+		if (!energyRequirement) continue;
 
-	double tempEventTime;
+		double tempEventTime;
 
-	// PID and time requirements
-	if ( PID == -1 ){
-	    PIDRequirement = true;
+		// PID and time requirements
+		if ( PID == -1 ) PIDRequirement = true;
+		else if (PID == 4) PIDRequirement = this->HasNeutronRecoil();
+		else if (PID == 6) PIDRequirement = this->HasNeutronCapture();
 
-	    // time is the median
-	    int size = temp->GetNumberOfPulses();
+		if (!PIDRequirement) continue;
+		
+		// time is the median time
+		int size = temp->GetNumberOfPulses();
 
-	    if (size % 2 == 0) 
-		tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
-	    else 
-		tempEventTime = temp->GetPulse(size / 2)->time;
-	} else {
-	    PIDRequirement = temp->IsSinglePulse() == PID ? true : false;
+		if (size % 2 == 0) 
+			tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
+		else 
+			tempEventTime = temp->GetPulse(size / 2)->time;
 
-	    tempEventTime = temp->GetPulse(0)->time;
-	}
+		// Time requirement
+		timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
 
-	if (!PIDRequirement) continue;
+		if (timeRequirement) return true;
+		else {
+		   foundPulse = PIDRequirement && energyRequirement;
 
-	// Time requirement
-	timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
-
-	if (timeRequirement) return true;
-	else {
-	   foundPulse = PIDRequirement && energyRequirement;
-
-	   if (foundPulse) return false;
-	}
+		   if (foundPulse) return false;
+		}
     }
 }
 
@@ -196,14 +202,14 @@ bool Event::NeutronCut(){
     double energyEvent = this->GetEnergyEvent( );
 
     int iHist = -1;
-    if ( energyEvent < 10 && energyEvent >= 0.5 ) iHist = (int) energyEvent;
+    if ( energyEvent < 14 && energyEvent >= 0.5 ) iHist = floor(energyEvent / 0.5) - 1;
 
     if (iHist == -1 ) return false;
     
-    PSD_t psdEnergy = PSD_per_energy[iHist];
+	Statistics_t p = protonRecoil[iHist];
 
-    double neutronBandMin = psdEnergy.protonBand.mean - 2 * psdEnergy.protonBand.std;
-    double neutronBandMax = psdEnergy.protonBand.mean + 2 * psdEnergy.protonBand.std;
+    double neutronBandMin = p.mean - 2 * p.std;
+    double neutronBandMax = p.mean + 2 * p.std;
 
     double pulsePSD = this->GetPulse( 0 )->PSD;
 
@@ -227,11 +233,11 @@ bool Event::IsMuonEvent(){
 }
 
 bool Event::IsCaptureEvent(){
-    return hasNeutronCapture && this->IsSinglePulse() == 6;
+    return hasNeutronCapture;
 }
 
 bool Event::IsRecoilEvent(){
-    return hasNeutronRecoil && this->IsSinglePulse() == 4;
+    return hasNeutronRecoil;
 }
 
 bool Event::FiducialCut (){

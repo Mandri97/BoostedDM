@@ -13,9 +13,9 @@
 #include "event.hh"
 
 
-#define NBIN_ENERGY 50
+#define NBIN_ENERGY 560
 #define MIN_ENERGY 0
-#define MAX_ENERGY 10
+#define MAX_ENERGY 14
 
 #define NBIN_SEGMENT 154
 #define MIN_SEGMENT 0
@@ -29,47 +29,12 @@ using namespace std;
 /* Argument requirement to launch the program */
 inline void helper (char *prgramName);
 
-
-/* Consider each root file separately */
-void analysis (char* filename, char* outname);
-
-
 /* Analyze root file */
-void analyzeRootFile (string rootFile);
+void analyzeRootFile (string rootFile, char *outname);
 
-void CutEvents (vector<Event> *events);
+void CutAndSaveEvents (vector<Event> *events, char *outname);
 
-/* Histograms {{{ */
-auto hEnergyPerEvent    = new TH1F("hEnergyPerEvent",   "All events",          NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hSinglePulseEvent  = new TH1F("hSinglePulseEvent", "Single Pulse",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hSignalCandidate   = new TH1F("hSignalCandidate",  "Signal candidate",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hFiducialization   = new TH1F("hFiducialization",  "Fiducial cut",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hMuonAdjacent      = new TH1F("hMuonAdjacent",     "Muon Adjacent veto",  NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hNeutronRecoil     = new TH1F("hNeutronRecoil",    "Neutron recoil veto", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hNeutronCapture    = new TH1F("hNeutronCapture",   "NLi capture veto",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hPileUp            = new TH1F("hPileUp",           "Pile Up Veto",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
-auto hPulseCandidatePSD = new TH1F("hPulseCandidatePSD","PSD value",	       200, 0, 0.5);
-
-// count
-auto hLiveSegment         = new TH1F("hLiveSegment",         "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
-auto hLiveSegmentFiducial = new TH1F("hLiveSegmentFiducial", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
-auto hLiveSegmentSignal   = new TH1F("hLiveSegmentSignal",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
-
-// TTrees
-auto tSelectedEvents =  new TTree("tSelectedEvents", "");
-auto tCountEvents    =  new TTree("tCountEvents", "");
-
-int tSeg = 0,
-    tMuonCounts = 0,
-    tRecoilCounts = 0,
-    tCaptureCounts = 0,
-    tClusterCounts = 0;
-
-double tEnergy = 0.0,
-       tPSD = 0.0,
-       tZ = 0.0,
-       tT = 0.0;
-/* }}} */
+auto hLiveSegment = new TH1F("hLiveSegment", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
 int main(int argc, char* argv[]){
     // Check for argument 
@@ -85,25 +50,13 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    // Initializing trees
-    tSelectedEvents->Branch("E", &tEnergy);
-    tSelectedEvents->Branch("PSD", &tPSD);
-    tSelectedEvents->Branch("z", &tZ);
-    tSelectedEvents->Branch("t", &tT);
-    tSelectedEvents->Branch("seg", &tSeg);
-
-    tCountEvents->Branch("muon", &tMuonCounts);
-    tCountEvents->Branch("recoil", &tRecoilCounts);
-    tCountEvents->Branch("capture", &tCaptureCounts);
-    tCountEvents->Branch("cluster", &tClusterCounts);
-
-    analysis(argv[1], argv[2]);
+    analyzeRootFile( string( argv[1] ), argv[2] );
 
     return 0;
 }
 
 
-void analyzeRootFile(string rootFile){
+void analyzeRootFile(string rootFile, char *outname){
     auto _file = new TFile(rootFile.c_str());
 
     cout << "Processing " << rootFile << " ... \n";
@@ -197,11 +150,14 @@ void analyzeRootFile(string rootFile){
 
     events->push_back(oneEvent);
 
-    CutEvents( events );
+    CutAndSaveEvents( events, outname );
 
     events->clear( );
 
     _file->Close( );
+
+
+    cout << "Analysis finished.\n\n";
 }
 
 
@@ -210,13 +166,109 @@ inline void helper(char *programName){
 }
 
 
-void analysis(char* filename, char* outname){ // {{{
+void CutAndSaveEvents (vector<Event> *events, char *outname){     
 
-    // Consider root file separately
-    //while (textFile >> oneRootFile) 
-    analyzeRootFile( string( filename ) );
+	auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
-    auto outFile = new TFile(Form("%s.root", outname), "recreate");
+	/* Histograms {{{ */
+	auto hEnergyPerEvent    = new TH1F("hEnergyPerEvent",   "All events",          NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hSinglePulseEvent  = new TH1F("hSinglePulseEvent", "Single Pulse",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hSignalCandidate   = new TH1F("hSignalCandidate",  "Signal candidate",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hFiducialization   = new TH1F("hFiducialization",  "Fiducial cut",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hMuonAdjacent      = new TH1F("hMuonAdjacent",     "Muon Adjacent veto",  NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hNeutronRecoil     = new TH1F("hNeutronRecoil",    "Neutron recoil veto", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hNeutronCapture    = new TH1F("hNeutronCapture",   "NLi capture veto",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hPileUp            = new TH1F("hPileUp",           "Pile Up Veto",        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+	auto hPulseCandidatePSD = new TH1F("hPulseCandidatePSD","PSD value",	       200, 0, 0.5);
+
+	// count
+	auto hLiveSegmentFiducial = new TH1F("hLiveSegmentFiducial", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+	auto hLiveSegmentSignal   = new TH1F("hLiveSegmentSignal",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+
+	// TTrees
+	auto tSelectedEvents =  new TTree("tSelectedEvents", "");
+	auto tCountEvents    =  new TTree("tCountEvents", "");
+
+	int tSeg = 0,
+		tMuonCounts = 0,
+		tRecoilCounts = 0,
+		tCaptureCounts = 0,
+		tClusterCounts = 0;
+
+	double tEnergy = 0.0,
+		   tPSD = 0.0,
+		   tZ = 0.0,
+		   tT = 0.0;
+
+	// Initializing trees
+    tSelectedEvents->Branch("E", &tEnergy);
+    tSelectedEvents->Branch("PSD", &tPSD);
+    tSelectedEvents->Branch("z", &tZ);
+    tSelectedEvents->Branch("t", &tT);
+    tSelectedEvents->Branch("seg", &tSeg);
+
+    tCountEvents->Branch("muon", &tMuonCounts);
+    tCountEvents->Branch("recoil", &tRecoilCounts);
+    tCountEvents->Branch("capture", &tCaptureCounts);
+    tCountEvents->Branch("cluster", &tClusterCounts);
+
+	/* }}} */
+
+    for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
+        Event *event = &events->at(iEvent);
+
+		// Count events
+		if (event->IsMuonEvent()) tMuonCounts++;
+		else if (event->IsRecoilEvent()) tRecoilCounts++;
+		else if (event->IsCaptureEvent()) tCaptureCounts++;
+
+        float energyEvent = event->GetEnergyEvent();
+
+        hEnergyPerEvent->Fill( energyEvent );
+
+		if ( event->SinglePulseCut() ){
+			hSinglePulseEvent->Fill(energyEvent);
+			hPulseCandidatePSD->Fill(event->GetPulse(0)->PSD);
+
+			if (event->NeutronCut()){
+				hSignalCandidate->Fill(energyEvent);
+
+				if (event->FiducialCut() && event->HeightCut(200)) {
+					hFiducialization->Fill(energyEvent);
+					hLiveSegmentFiducial->Fill(event->GetPulse(0)->segment);
+
+					if (event->MuonVeto(iEvent, events, 5)){
+						hMuonAdjacent->Fill(energyEvent);
+
+						if (event->RecoilVeto(iEvent, events, 5)){
+							hNeutronRecoil->Fill(energyEvent);
+
+							if (event->CaptureVeto(iEvent, events, 500)){
+								hNeutronCapture->Fill(energyEvent);
+
+								if (event->PileUpVeto(iEvent, events, 2)){
+									hPileUp->Fill(energyEvent);
+									hLiveSegmentSignal->Fill(event->GetPulse(0)->segment);
+
+									//tZ = event->GetPulse(0)->height;
+									//tT = event->GetPulse(0)->time;
+									tSeg = event->GetPulse(0)->segment;
+									tPSD = event->GetPulse(0)->PSD;
+									tEnergy = event->GetPulse(0)->energy;
+
+									tSelectedEvents->Fill();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+    }
+
+    tClusterCounts = events->size();
+
+    tCountEvents->Fill();
 
     // Save histogram
     hPileUp->Write();
@@ -236,65 +288,4 @@ void analysis(char* filename, char* outname){ // {{{
     tCountEvents->Write();
 
     outFile->Close();
-
-    cout << "Analysis finished.\n\n";
-} //}}}
-
-
-void CutEvents (vector<Event> *events){     
-    for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
-        Event *event = &events->at(iEvent);
-
-	// Count events
-	if (event->IsMuonEvent()) tMuonCounts++;
-	else if (event->IsRecoilEvent()) tRecoilCounts++;
-	else if (event->IsCaptureEvent()) tCaptureCounts++;
-
-        float energyEvent = event->GetEnergyEvent();
-
-        hEnergyPerEvent->Fill( energyEvent );
-
-	if ( event->SinglePulseCut() ){
-	    hSinglePulseEvent->Fill(energyEvent);
-	    hPulseCandidatePSD->Fill(event->GetPulse(0)->PSD);
-
-	    if (event->NeutronCut()){
-		hSignalCandidate->Fill(energyEvent);
-
-		if (event->FiducialCut() && event->HeightCut(200)) {
-		    hFiducialization->Fill(energyEvent);
-		    hLiveSegmentFiducial->Fill(event->GetPulse(0)->segment);
-
-		    if (event->MuonVeto(iEvent, events, 5)){
-			hMuonAdjacent->Fill(energyEvent);
-
-			if (event->RecoilVeto(iEvent, events, 5)){
-			    hNeutronRecoil->Fill(energyEvent);
-
-			    if (event->CaptureVeto(iEvent, events, 500)){
-				hNeutronCapture->Fill(energyEvent);
-
-				if (event->PileUpVeto(iEvent, events, 2)){
-				    hPileUp->Fill(energyEvent);
-				    hLiveSegmentSignal->Fill(event->GetPulse(0)->segment);
-
-				    tZ = event->GetPulse(0)->height;
-				    tT = event->GetPulse(0)->time;
-				    tSeg = event->GetPulse(0)->segment;
-				    tPSD = event->GetPulse(0)->PSD;
-				    tEnergy = event->GetPulse(0)->energy;
-
-				    tSelectedEvents->Fill();
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
-    }
-
-    tClusterCounts = events->size();
-
-    tCountEvents->Fill();
 } 
