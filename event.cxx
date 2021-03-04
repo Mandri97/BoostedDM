@@ -33,12 +33,12 @@ PSD_t PSD_per_energy[10] = {
 
 // New PSD parameters 0.5 MeV interval
 Statistics_t protonRecoil[27] = {{2.608e-1, 2.094e-2}, {2.156e-1, 1.541e-2}, {2.143e-1, 1.450e-2}, {2.087e-1, 1.325e-2},
-				    			 {2.040e-1, 1.291e-2}, {2.011e-1, 1.510e-2}, {1.978e-1, 1.393e-2}, {1.952e-1, 1.340e-2},
-				    			 {1.921e-1, 1.283e-2}, {1.900e-1, 1.268e-2}, {1.867e-1, 1.077e-2}, {1.853e-1, 1.087e-2},
-				    			 {1.839e-1, 1.024e-2}, {1.838e-1, 1.172e-2}, {1.812e-1, 9.326e-3}, {1.796e-1, 9.306e-3},
-				    			 {1.794e-1, 9.251e-3}, {1.787e-1, 9.301e-3}, {1.785e-1, 1.016e-2}, {1.766e-1, 8.876e-3},
-				    			 {1.774e-1, 8.946e-3}, {1.759e-1, 9.287e-3}, {1.753e-1, 9.768e-3}, {1.741e-1, 1.104e-2},
-				    			 {1.736e-1, 1.101e-2}, {1.722e-1, 1.272e-2}, {1.679e-1, 1.486e-2}};
+				 {2.040e-1, 1.291e-2}, {2.011e-1, 1.510e-2}, {1.978e-1, 1.393e-2}, {1.952e-1, 1.340e-2},
+				 {1.921e-1, 1.283e-2}, {1.900e-1, 1.268e-2}, {1.867e-1, 1.077e-2}, {1.853e-1, 1.087e-2},
+				 {1.839e-1, 1.024e-2}, {1.838e-1, 1.172e-2}, {1.812e-1, 9.326e-3}, {1.796e-1, 9.306e-3},
+				 {1.794e-1, 9.251e-3}, {1.787e-1, 9.301e-3}, {1.785e-1, 1.016e-2}, {1.766e-1, 8.876e-3},
+	    			 {1.774e-1, 8.946e-3}, {1.759e-1, 9.287e-3}, {1.753e-1, 9.768e-3}, {1.741e-1, 1.104e-2},
+	    			 {1.736e-1, 1.101e-2}, {1.722e-1, 1.272e-2}, {1.679e-1, 1.486e-2}};
 
 /* class Pulse_t {{{ */
 Pulse_t::Pulse_t(int seg,  int PID,  double h,  
@@ -108,44 +108,43 @@ bool Event::SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double
 	 energyRequirement = false,
 	 PIDRequirement = false;
 
-    
     for ( long int i = iEvent + offset, j = allEvents->size();; i += offset ){
-		// Limit reached
-		if (i == 0 || i == j) return true;
+	// Limit reached
+	if (i == 0 || i == j) return true;
 
-		auto temp = &allEvents->at(i);	
-		
-		// Energy requirement
-		energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
+	auto temp = &allEvents->at(i);	
+	
+	// Energy requirement
+	energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
 
-		if (!energyRequirement) continue;
+	if (!energyRequirement) continue;
 
-		double tempEventTime;
+	double tempEventTime;
 
-		// PID and time requirements
-		if ( PID == -1 ) PIDRequirement = true;
-		else if (PID == 4) PIDRequirement = this->HasNeutronRecoil();
-		else if (PID == 6) PIDRequirement = this->HasNeutronCapture();
+	// PID and time requirements
+	if ( PID == -1 ) PIDRequirement = true;
+	else if (PID == 4) PIDRequirement = this->IsRecoilEvent();
+	else if (PID == 6) PIDRequirement = this->IsCaptureEvent();
 
-		if (!PIDRequirement) continue;
-		
-		// time is the median time
-		int size = temp->GetNumberOfPulses();
+	if (!PIDRequirement) continue;
+	
+	// time is the median time
+	int size = temp->GetNumberOfPulses();
 
-		if (size % 2 == 0) 
-			tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
-		else 
-			tempEventTime = temp->GetPulse(size / 2)->time;
+	if (size % 2 == 0) 
+		tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
+	else 
+		tempEventTime = temp->GetPulse(size / 2)->time;
 
-		// Time requirement
-		timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
+	// Time requirement
+	timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
 
-		if (timeRequirement) return true;
-		else {
-		   foundPulse = PIDRequirement && energyRequirement;
+	if (timeRequirement) return true;
+	else {
+	   foundPulse = PIDRequirement && energyRequirement;
 
-		   if (foundPulse) return false;
-		}
+	   if (foundPulse) return false;
+	}
     }
 }
 
@@ -216,14 +215,6 @@ bool Event::NeutronCut(){
    return pulsePSD >= neutronBandMin && pulsePSD <= neutronBandMax;
 }
 
-bool Event::HasNeutronRecoil(){
-    return hasNeutronRecoil;
-}
-
-bool Event::HasNeutronCapture(){
-    return hasNeutronCapture;
-}
-
 bool Event::IsBetaDecayEvent(){
     return isGammaEvent && this->IsSinglePulse() == 0;
 }
@@ -233,7 +224,7 @@ bool Event::IsMuonEvent(){
 }
 
 bool Event::IsCaptureEvent(){
-    return hasNeutronCapture;
+    return hasNeutronCapture && this->IsSinglePulse() == 6;
 }
 
 bool Event::IsRecoilEvent(){

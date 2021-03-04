@@ -56,14 +56,11 @@ class Event {
         void AddPulse(Pulse_t pulse);
 
         int  IsSinglePulse();
-        bool HasNeutronRecoil();
-        bool HasNeutronCapture();
         bool IsBetaDecayEvent();
 	bool IsMuonEvent();
 	bool IsGammaEvent();
 	bool IsRecoilEvent();
 	bool IsCaptureEvent();
-
 
         // Cuts
         bool FiducialCut    ( );
