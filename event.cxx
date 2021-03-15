@@ -1,5 +1,4 @@
 #include "event.hh"
-#include <cmath>
 
 using namespace std;
 
@@ -32,13 +31,13 @@ PSD_t PSD_per_energy[10] = {
 */
 
 // New PSD parameters 0.5 MeV interval
-Statistics_t protonRecoil[27] = {{2.608e-1, 2.094e-2}, {2.156e-1, 1.541e-2}, {2.143e-1, 1.450e-2}, {2.087e-1, 1.325e-2},
-				 {2.040e-1, 1.291e-2}, {2.011e-1, 1.510e-2}, {1.978e-1, 1.393e-2}, {1.952e-1, 1.340e-2},
-				 {1.921e-1, 1.283e-2}, {1.900e-1, 1.268e-2}, {1.867e-1, 1.077e-2}, {1.853e-1, 1.087e-2},
-				 {1.839e-1, 1.024e-2}, {1.838e-1, 1.172e-2}, {1.812e-1, 9.326e-3}, {1.796e-1, 9.306e-3},
-				 {1.794e-1, 9.251e-3}, {1.787e-1, 9.301e-3}, {1.785e-1, 1.016e-2}, {1.766e-1, 8.876e-3},
-	    			 {1.774e-1, 8.946e-3}, {1.759e-1, 9.287e-3}, {1.753e-1, 9.768e-3}, {1.741e-1, 1.104e-2},
-	    			 {1.736e-1, 1.101e-2}, {1.722e-1, 1.272e-2}, {1.679e-1, 1.486e-2}};
+Statistics_t protonRecoil[27] = {{2.610e-1, 2.057e-2}, {2.359e-1, 2.677e-2}, {2.159e-1, 1.635e-2}, {2.088e-1, 1.583e-2},
+								 {2.048e-1, 1.519e-2}, {2.002e-1, 1.405e-2}, {1.975e-1, 1.417e-2}, {1.947e-1, 1.327e-2},
+								 {1.923e-1, 1.297e-2}, {1.899e-1, 1.341e-2}, {1.877e-1, 1.184e-2}, {1.869e-1, 1.259e-2},
+								 {1.850e-1, 1.207e-2}, {1.845e-1, 1.116e-2}, {1.822e-1, 1.116e-2}, {1.803e-1, 1.071e-2},
+								 {1.801e-1, 1.066e-2}, {1.796e-1, 1.093e-2}, {1.778e-1, 1.085e-2}, {1.772e-1, 1.039e-2},
+								 {1.778e-1, 9.558e-3}, {1.755e-1, 9.605e-3}, {1.753e-1, 1.152e-2}, {1.741e-1, 1.034e-2},
+								 {1.743e-1, 1.090e-2}, {1.729e-1, 1.166e-2}, {1.707e-1, 1.137e-2}};
 
 /* class Pulse_t {{{ */
 Pulse_t::Pulse_t(int seg,  int PID,  double h,  
@@ -87,9 +86,6 @@ void Event::Initialize(){
 }
 
 
-// time of event is the median pulse
-// 
-//
 bool Event::SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double time , double minE, int PID = -1){
     auto currentEvent = &allEvents->at(iEvent);
 
@@ -101,50 +97,44 @@ bool Event::SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double
 
     time = abs(time);
 
-    long int i = iEvent + offset;
-
-    bool foundPulse = false,
-	 timeRequirement = false,
-	 energyRequirement = false,
-	 PIDRequirement = false;
+    bool timeRequirement = false,
+	 	 energyRequirement = false,
+	 	 PIDRequirement = false;
 
     for ( long int i = iEvent + offset, j = allEvents->size();; i += offset ){
-	// Limit reached
-	if (i == 0 || i == j) return true;
+		// Limit reached
+		if (i == -1 || i == j) return true;
 
-	auto temp = &allEvents->at(i);	
-	
-	// Energy requirement
-	energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
+		auto temp = &allEvents->at(i);	
+		
+		// time is the median time
+		int size = temp->GetNumberOfPulses();
 
-	if (!energyRequirement) continue;
+		double tempEventTime;
 
-	double tempEventTime;
+		if (size % 2 == 0) 
+			tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
+		else 
+			tempEventTime = temp->GetPulse(size / 2)->time;
 
-	// PID and time requirements
-	if ( PID == -1 ) PIDRequirement = true;
-	else if (PID == 4) PIDRequirement = this->IsRecoilEvent();
-	else if (PID == 6) PIDRequirement = this->IsCaptureEvent();
+		// Time requirement
+		timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
 
-	if (!PIDRequirement) continue;
-	
-	// time is the median time
-	int size = temp->GetNumberOfPulses();
+		if (timeRequirement) return true;
 
-	if (size % 2 == 0) 
-		tempEventTime = (temp->GetPulse(size / 2 - 1)->time + temp->GetPulse(size / 2)->time) / 2;
-	else 
-		tempEventTime = temp->GetPulse(size / 2)->time;
+		// Energy requirement
+		energyRequirement = temp->GetEnergyEvent() > minE ? true : false;
 
-	// Time requirement
-	timeRequirement =  abs(currentPulseTime - tempEventTime) * 1e-3 > time;
+		if (!energyRequirement) continue;
 
-	if (timeRequirement) return true;
-	else {
-	   foundPulse = PIDRequirement && energyRequirement;
+		// PID and time requirements
+		if ( PID == -1 ) PIDRequirement = true;
+		else if (PID == 4) PIDRequirement = temp->IsRecoilEvent();
+		else if (PID == 6) PIDRequirement = temp->IsCaptureEvent();
 
-	   if (foundPulse) return false;
-	}
+		if (!PIDRequirement) continue;
+		
+		return false;
     }
 }
 
@@ -194,25 +184,22 @@ int Event::IsSinglePulse(){
 
 bool Event::SinglePulseCut( ){ return this->IsSinglePulse() != 0; }
 
-bool Event::NeutronCut(){
+bool Event::NeutronCut(TH1D *hMin, TH1D *hMax){
 
     if ( !this->SinglePulseCut( ) ) return false;
 
     double energyEvent = this->GetEnergyEvent( );
 
     int iHist = -1;
-    if ( energyEvent < 14 && energyEvent >= 0.5 ) iHist = floor(energyEvent / 0.5) - 1;
+    if ( energyEvent < 14 && energyEvent >= 0.5 ) iHist = hMin->GetXaxis()->FindBin(energyEvent);
+	else return false;
 
-    if (iHist == -1 ) return false;
-    
-	Statistics_t p = protonRecoil[iHist];
-
-    double neutronBandMin = p.mean - 2 * p.std;
-    double neutronBandMax = p.mean + 2 * p.std;
+	double neutronMin = hMin->GetBinContent(iHist);
+	double neutronMax = hMax->GetBinContent(iHist);
 
     double pulsePSD = this->GetPulse( 0 )->PSD;
 
-   return pulsePSD >= neutronBandMin && pulsePSD <= neutronBandMax;
+   return pulsePSD >= neutronMin && pulsePSD <= neutronMax;
 }
 
 bool Event::IsBetaDecayEvent(){
@@ -286,7 +273,7 @@ bool Event::RecoilVeto(int iEvent, std::vector<Event> *allEvents, double time){
 }
 
 bool Event::CaptureVeto(int iEvent, std::vector<Event> *allEvents, double time){
-    return SearchEventInTime(iEvent, allEvents, +time, 0, 6);
+    return SearchEventInTime(iEvent, allEvents, -time, 0, 6);
 }
 
 // TODO: Broken function - DO NOT USE

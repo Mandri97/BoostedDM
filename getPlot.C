@@ -12,15 +12,15 @@ void getPlot(char* rootFile){
 
     /* Scaling coefficient {{{ */
         
-        auto hist_liveSegment = (TH1F*)_file->Get("hLiveSegment");
-        auto hist_liveSegment_Segment_z_DoubleFV = (TH1F*)_file->Get("hLiveSegmentFiducial");
+        auto hLiveSegment = (TH1F*)_file->Get("hLiveSegment");
+        auto hLiveSegmentFD = (TH1F*)_file->Get("hLiveSegmentFiducial");
 
         int segmentAllEvent  = 0,
             segmentDoubleCut = 0;
 
         for (int i = 1; i < 155; i++){
-            if (hist_liveSegment->GetBinContent(i)) segmentAllEvent++;
-            if (hist_liveSegment_Segment_z_DoubleFV->GetBinContent(i)) segmentDoubleCut++;
+            if (hLiveSegment->GetBinContent(i)) segmentAllEvent++;
+            if (hLiveSegmentFD->GetBinContent(i)) segmentDoubleCut++;
         }
 
         // scale = Hz / MeV / kg
@@ -33,118 +33,118 @@ void getPlot(char* rootFile){
 
     /* All events {{{ */
     // Black
-        auto hist_EnergyPerEvent = (TH1F*)_file->Get("hEnergyPerEvent");
-        hist_EnergyPerEvent->SetLineColor(kBlack);
-        hist_EnergyPerEvent->Scale(scaleAllEvent);
+        auto hAllEvent = (TH1F*)_file->Get("hEnergyPerEvent");
+        hAllEvent->SetLineColor(kBlack);
+        hAllEvent->Scale(scaleAllEvent);
     /* }}} */
 
 
     /* Single Pulse Event {{{ */
     // Blue
-        auto hist_SinglePulseEvent = (TH1F*)_file->Get("hSinglePulseEvent");
-        hist_SinglePulseEvent->SetLineColor(kOrange + 3);
-        hist_SinglePulseEvent->Scale(scaleAllEvent);
+        auto hSinglePulse = (TH1F*)_file->Get("hSinglePulseEvent");
+        hSinglePulse->SetLineColor(kOrange + 3);
+        hSinglePulse->Scale(scaleAllEvent);
     /* }}} */
     
 
     /* Signal {{{ */
     // Red
-        auto hist_Signal = (TH1F*)_file->Get("hSignalCandidate");
-        hist_Signal->SetLineColor(kOrange - 2);
-        hist_Signal->Scale(scaleAllEvent);
+        auto hSignalCandidate = (TH1F*)_file->Get("hSignalCandidate");
+        hSignalCandidate->SetLineColor(kOrange - 2);
+        hSignalCandidate->Scale(scaleAllEvent);
     /* }}} */
     
 
     /* Segment and height double fiducialization {{{ */
     // Purple
-        auto hist_Signal_Segmet_z_DoubleFV = (TH1F*)_file->Get("hFiducialization");
-        hist_Signal_Segmet_z_DoubleFV->SetLineColor(kYellow - 3);
-        hist_Signal_Segmet_z_DoubleFV->Scale(scaleDoubleCut);
+        auto hFiducialization = (TH1F*)_file->Get("hFiducialization");
+        hFiducialization->SetLineColor(kYellow - 3);
+        hFiducialization->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* Muon Adjacent veto {{{ */
     // kTeal +4
-        auto hist_Signal_MuonAdjacent_time5 = (TH1F*)_file->Get("hMuonAdjacent");
-        hist_Signal_MuonAdjacent_time5->SetLineColor(kMagenta + 2);
-        hist_Signal_MuonAdjacent_time5->Scale(scaleDoubleCut);
+        auto hMuonVeto = (TH1F*)_file->Get("hMuonAdjacent");
+        hMuonVeto->SetLineColor(kMagenta + 2);
+        hMuonVeto->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* Neutron recoil Adjacent veto {{{ */
     // kCyan - 3
-        auto hist_Signal_NeutronRecoilAdjacent_time5 = (TH1F*)_file->Get("hNeutronRecoil");
-        hist_Signal_NeutronRecoilAdjacent_time5->SetLineColor(kTeal + 4);
-        hist_Signal_NeutronRecoilAdjacent_time5->Scale(scaleDoubleCut);
+        auto hRecoiVeto = (TH1F*)_file->Get("hNeutronRecoil");
+        hRecoiVeto->SetLineColor(kTeal + 4);
+        hRecoiVeto->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* NLi Capture Adjacent veto {{{ */
     // kYellow - 3
-        auto hist_Signal_NLiCaptureAdjacent_time400 = (TH1F*)_file->Get("hNeutronCapture");
-        hist_Signal_NLiCaptureAdjacent_time400->SetLineColor(kCyan - 6);
-        hist_Signal_NLiCaptureAdjacent_time400->Scale(scaleDoubleCut);
+        auto hCaptureVeto = (TH1F*)_file->Get("hNeutronCapture");
+        hCaptureVeto->SetLineColor(kCyan - 6);
+        hCaptureVeto->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* Pile Up {{{ */
     // kOrange - 3
-        auto hist_Signal_PileUp_time2 = (TH1F*)_file->Get("hPileUp");
-	hist_Signal_PileUp_time2->SetTitle("Pile Up veto 4 #mus");
-        hist_Signal_PileUp_time2->SetLineColor(kRed - 7);
-        hist_Signal_PileUp_time2->Scale(scaleDoubleCut);
+        auto hPileUp = (TH1F*)_file->Get("hPileUp");
+		hPileUp->SetTitle("Pile Up veto 4 #mus");
+        hPileUp->SetLineColor(kRed - 7);
+        hPileUp->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* Rn - Po Correlated Decay {{{ */
-       auto hist_Signal_RnPoCorrelatedDecay = (TH1F*)_file->Get("hRnPoDecay") ;
-       hist_Signal_RnPoCorrelatedDecay->Scale(scaleDoubleCut);
+       auto hRnPoVeto = (TH1F*)_file->Get("hRnPoDecay") ;
+       hRnPoVeto->Scale(scaleDoubleCut);
     /* }}} */
 
 
     /* Bi - Po Correlated Decay {{{ */
-        auto hist_Signal_BiPoCorrelatedDecay = (TH1F*)_file->Get("hBiPoDecay");
-        hist_Signal_BiPoCorrelatedDecay->Scale(scaleDoubleCut);
-        hist_Signal_BiPoCorrelatedDecay->SetLineColor(kPink - 2);
+        auto hBiPoVeto = (TH1F*)_file->Get("hBiPoDecay");
+        hBiPoVeto->Scale(scaleDoubleCut);
+        hBiPoVeto->SetLineColor(kPink - 2);
     /* }}} */
 
-    hist_EnergyPerEvent->GetYaxis()->SetRangeUser(1e-7, 0.8);
-    hist_EnergyPerEvent->GetYaxis()->SetTitle("Rate [Hz/MeV/kg]");
-    hist_EnergyPerEvent->GetYaxis()->SetTitleSize(0.03);
-    hist_EnergyPerEvent->GetYaxis()->SetTitleOffset(1.55);
-    hist_EnergyPerEvent->GetYaxis()->CenterTitle(kTRUE);
-    hist_EnergyPerEvent->GetYaxis()->SetLabelSize(0.03);
+    hAllEvent->GetYaxis()->SetRangeUser(1e-7, 0.8);
+    hAllEvent->GetYaxis()->SetTitle("Rate [Hz/MeV/kg]");
+    hAllEvent->GetYaxis()->SetTitleSize(0.03);
+    hAllEvent->GetYaxis()->SetTitleOffset(1.55);
+    hAllEvent->GetYaxis()->CenterTitle(kTRUE);
+    hAllEvent->GetYaxis()->SetLabelSize(0.03);
 
-    hist_EnergyPerEvent->GetXaxis()->SetRangeUser(0.5, 10);
-    hist_EnergyPerEvent->GetXaxis()->SetTitle("Visible Energy [MeV]");
-    hist_EnergyPerEvent->GetXaxis()->SetTitleSize(0.03);
-    hist_EnergyPerEvent->GetXaxis()->CenterTitle(kTRUE);
-    hist_EnergyPerEvent->GetXaxis()->SetLabelSize(0.03);
+    hAllEvent->GetXaxis()->SetRangeUser(0.5, 10);
+    hAllEvent->GetXaxis()->SetTitle("Visible Energy [MeV]");
+    hAllEvent->GetXaxis()->SetTitleSize(0.03);
+    hAllEvent->GetXaxis()->CenterTitle(kTRUE);
+    hAllEvent->GetXaxis()->SetLabelSize(0.03);
 
-    hist_Signal->GetYaxis()->SetRangeUser(1e-7, 0.8);
-    hist_Signal->GetYaxis()->SetTitle("Rate [Hz/MeV/kg]");
-    hist_Signal->GetYaxis()->SetTitleSize(0.03);
-    hist_Signal->GetYaxis()->SetTitleOffset(1.55);
-    hist_Signal->GetYaxis()->CenterTitle(kTRUE);
-    hist_Signal->GetYaxis()->SetLabelSize(0.03);
+    hSignalCandidate->GetYaxis()->SetRangeUser(1e-7, 0.8);
+    hSignalCandidate->GetYaxis()->SetTitle("Rate [Hz/MeV/kg]");
+    hSignalCandidate->GetYaxis()->SetTitleSize(0.03);
+    hSignalCandidate->GetYaxis()->SetTitleOffset(1.55);
+    hSignalCandidate->GetYaxis()->CenterTitle(kTRUE);
+    hSignalCandidate->GetYaxis()->SetLabelSize(0.03);
 
-    hist_Signal->GetXaxis()->SetRangeUser(0.5, 10);
-    hist_Signal->GetXaxis()->SetTitle("Visible Energy [MeV]");
-    hist_Signal->GetXaxis()->SetTitleSize(0.03);
-    hist_Signal->GetXaxis()->CenterTitle(kTRUE);
-    hist_Signal->GetXaxis()->SetLabelSize(0.03);
+    hSignalCandidate->GetXaxis()->SetRangeUser(0.5, 10);
+    hSignalCandidate->GetXaxis()->SetTitle("Visible Energy [MeV]");
+    hSignalCandidate->GetXaxis()->SetTitleSize(0.03);
+    hSignalCandidate->GetXaxis()->CenterTitle(kTRUE);
+    hSignalCandidate->GetXaxis()->SetLabelSize(0.03);
     vector<TH1F*> toDraw;
 
-    toDraw.push_back(hist_EnergyPerEvent);
-    toDraw.push_back(hist_SinglePulseEvent);
-    toDraw.push_back(hist_Signal);
-    toDraw.push_back(hist_Signal_Segmet_z_DoubleFV);
-    toDraw.push_back(hist_Signal_MuonAdjacent_time5);
-    toDraw.push_back(hist_Signal_NeutronRecoilAdjacent_time5);
-    toDraw.push_back(hist_Signal_NLiCaptureAdjacent_time400);
-    toDraw.push_back(hist_Signal_PileUp_time2);
-    toDraw.push_back(hist_Signal_RnPoCorrelatedDecay);
-    toDraw.push_back(hist_Signal_BiPoCorrelatedDecay);
+    toDraw.push_back(hAllEvent);
+    toDraw.push_back(hSinglePulse);
+    toDraw.push_back(hSignalCandidate);
+    toDraw.push_back(hFiducialization);
+    toDraw.push_back(hMuonVeto);
+    toDraw.push_back(hRecoiVeto);
+    toDraw.push_back(hCaptureVeto);
+    toDraw.push_back(hPileUp);
+    toDraw.push_back(hRnPoVeto);
+    toDraw.push_back(hBiPoVeto);
 
     Draw(&toDraw);
 }

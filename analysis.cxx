@@ -8,7 +8,7 @@
 #include <TBranch.h>
 #include <TH1.h>
 #include <TH2.h>
-
+#include <TObjArray.h>
 
 #include "event.hh"
 
@@ -168,6 +168,11 @@ inline void helper(char *programName){
 
 void CutAndSaveEvents (vector<Event> *events, char *outname){     
 
+	auto inFile = new TFile("/home/manoa/work/BoostedDM/TreeImplementation/protonRecoilBand.root");
+
+	auto hProtonMin = (TH1D*) inFile->Get("hProtonMin");
+	auto hProtonMax = (TH1D*) inFile->Get("hProtonMax");
+
 	auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
 	/* Histograms {{{ */
@@ -230,7 +235,7 @@ void CutAndSaveEvents (vector<Event> *events, char *outname){
 			hSinglePulseEvent->Fill(energyEvent);
 			hPulseCandidatePSD->Fill(event->GetPulse(0)->PSD);
 
-			if (event->NeutronCut()){
+			if (event->NeutronCut(hProtonMin, hProtonMax)){
 				hSignalCandidate->Fill(energyEvent);
 
 				if (event->FiducialCut() && event->HeightCut(200)) {
@@ -240,7 +245,7 @@ void CutAndSaveEvents (vector<Event> *events, char *outname){
 					if (event->MuonVeto(iEvent, events, 5)){
 						hMuonAdjacent->Fill(energyEvent);
 
-						if (event->RecoilVeto(iEvent, events, 5)){
+						if (event->RecoilVeto(iEvent, events, 4)){
 							hNeutronRecoil->Fill(energyEvent);
 
 							if (event->CaptureVeto(iEvent, events, 500)){
@@ -250,8 +255,8 @@ void CutAndSaveEvents (vector<Event> *events, char *outname){
 									hPileUp->Fill(energyEvent);
 									hLiveSegmentSignal->Fill(event->GetPulse(0)->segment);
 
-									//tZ = event->GetPulse(0)->height;
-									//tT = event->GetPulse(0)->time;
+									tZ = event->GetPulse(0)->height;
+									tT = event->GetPulse(0)->time;
 									tSeg = event->GetPulse(0)->segment;
 									tPSD = event->GetPulse(0)->PSD;
 									tEnergy = event->GetPulse(0)->energy;
@@ -265,6 +270,8 @@ void CutAndSaveEvents (vector<Event> *events, char *outname){
 			}
 		}
     }
+
+	outFile->cd();
 
     tClusterCounts = events->size();
 
@@ -284,8 +291,12 @@ void CutAndSaveEvents (vector<Event> *events, char *outname){
     hLiveSegmentSignal->Write();
     hLiveSegmentFiducial->Write();
 
+	hProtonMin->Write();
+	hProtonMax->Write();
+
     tSelectedEvents->Write();
     tCountEvents->Write();
 
     outFile->Close();
+	inFile->Close();
 } 

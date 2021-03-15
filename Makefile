@@ -15,7 +15,7 @@ analysis.o: analysis.cxx
 	$(CXX) -c analysis.cxx -o analysis.o $(CPPFLAGS) $(LDLIBS) 
 
 event.o: event.cxx event.hh
-	$(CXX) -c event.cxx -o event.o
+	$(CXX) -c event.cxx -o event.o $(CPPFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) *.o *~ analysis

@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <cmath>
 
+#include <TH1.h>
+
 #ifndef __EVENT_H_
 #define __EVENT_H_
 
@@ -37,10 +39,10 @@ class Event {
         bool hasNeutronRecoil,
              hasNeutronCapture;
 
-	bool isMuonEvent,
+		bool isMuonEvent,
              isGammaEvent;
 
-	bool SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double time, double minE, int PID);
+		bool SearchEventInTime( int iEvent, std::vector<Event> *allEvents, double time, double minE, int PID);
 
     public:
         Event();
@@ -57,21 +59,22 @@ class Event {
 
         int  IsSinglePulse();
         bool IsBetaDecayEvent();
-	bool IsMuonEvent();
-	bool IsGammaEvent();
-	bool IsRecoilEvent();
-	bool IsCaptureEvent();
+		bool IsMuonEvent();
+		bool IsGammaEvent();
+		bool IsRecoilEvent();
+		bool IsCaptureEvent();
 
         // Cuts
         bool FiducialCut    ( );
         bool SinglePulseCut ( );
-        bool NeutronCut     ( );
+        bool NeutronCut     ( TH1D *hMin, TH1D *hMax );
         bool HeightCut      ( double height );
         bool MuonVeto       ( int iEvent, std::vector<Event> *allEvents, double time );
         bool PileUpVeto     ( int iEvent, std::vector<Event> *allEvents, double time );
-	bool RecoilVeto     ( int iEvent, std::vector<Event> *allEvents, double time);
-	bool CaptureVeto    ( int iEvent, std::vector<Event> *allEvents, double time);
-	// Broken function
+		bool RecoilVeto     ( int iEvent, std::vector<Event> *allEvents, double time);
+		bool CaptureVeto    ( int iEvent, std::vector<Event> *allEvents, double time);
+
+		// Broken function
         bool RnPoDecayCut   ( int iEvent, std::vector<Event> *allEvents, double time, double height );
         bool BiPoDecayCut   ( int iEvent, std::vector<Event> *allEvents, double time, double height );
 };
