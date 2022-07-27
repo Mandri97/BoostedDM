@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PBS -j oe
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=5:00:00
+#PBS -F arguments
+
+source $HOME/setup.sh
+
+INPUT_NAME=$(echo $1 | cut -d "." -f 1 | grep -o '[^/]*$')
+OUTPUT_NAME="$2/${INPUT_NAME}_MuonEvent"
+
+# TODO: Change to where the analysis binary is located
+BIN_ANALYSIS=${HOME}/work/BoostedDM/FinalPlot/analysis
+
+# Submiting job
+${BIN_ANALYSIS} $1 ${OUTPUT_NAME}
