@@ -67,6 +67,7 @@ auto hLiveSegmentSignal1  = new TH1F("hLiveSegmentSignal1",  "", NBIN_SEGMENT, M
 auto hLiveSegmentNeutron  = new TH1F("hLiveSegmentNeutron",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentPileUp   = new TH1F("hLiveSegmentPileUp",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
+TVectorT<double> *runtime;
 
 /* }}} */
 
@@ -192,6 +193,9 @@ void analyzeRootFile(string rootFile){
 
     events->clear( );
 
+    // Save runtime
+    runtime = (TVector<double>*) _file->Get("runtime");
+
     _file->Close( );
 }
 
@@ -233,6 +237,8 @@ void analysis(char* filename, char* outname){ // {{{
     hPulseCandidateDefaultPSD->Write();
 
     //for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
+
+    runtime->Write("runtime");
 
     outFile->Close();
 
