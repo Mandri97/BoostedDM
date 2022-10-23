@@ -3,6 +3,7 @@
 
 #include <TH1F.h>
 #include <TFile.h>
+#include <TTree.h>
 #include <TGraph.h>
 #include <TCanvas.h>
 #include <TVectorT.h>
@@ -36,15 +37,21 @@ void plotRate(char* filename){
         TFile* _rootfile = new TFile(line.c_str());
         if (_rootfile->IsZombie()) FILE_NOT_FOUND(line.c_str());
 
-        // Get histogram
-        auto hEnergySelectedEvents = (TH1D*)_rootfile->Get("hEnergyPerEvent");
+        // Get Tree
+        auto t_selectedEvts = (TTree*) _rootfile->Get("SelectedEvents");
+
+        // Create histogram
+        auto hEnergySelectedEvents = new TH1D("hEnergySelectedEvents", "", 1000, 0, 100);
+        
+        // Fill histogram
+        t_selectedEvts->Draw("E >> hEnergySelectedEvents", "", "goff");
 
         // Get runtime
         double runtime  = ((TVectorT<double> *) _rootfile->Get("runtime"))->Max();
         double binWidth = hEnergySelectedEvents->GetBinWidth(1);
-        double aliveSeg = 126;
+        //double aliveSeg = 126;
 
-        double scaling = 1 / (runtime * binWidth * aliveSeg * 24.2);
+        double scaling = 1 / (runtime * binWidth); //* aliveSeg * 24.2);
 
         hEnergySelectedEvents->Scale(scaling);
 
@@ -80,4 +87,6 @@ int main(int argc, char* argv[]){
     if (argc != 2) helper();
 
     plotRate(argv[1]);
+
+    return 0;
 }
