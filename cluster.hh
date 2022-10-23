@@ -29,10 +29,10 @@ class Pulse_t {
 };
 
 /* class for one event */
-class Event {
+class Cluster {
     private:
         std::vector<Pulse_t> pulses;     // vector containing all pulses in one event
-        float energyEvent;               // energy of the event
+        float clusterEnergy;             // energy of the event
 
         bool _hasNeutronRecoil,
              _hasNeutronCapture,
@@ -48,13 +48,13 @@ class Event {
                       _NeutronCaptureDeadTime;
 
     public:
-        Event();
-        ~Event();
+        Cluster();
+        ~Cluster();
 
         void Initialize();
 
         int      GetNumberOfPulses( );
-        float    GetEnergyEvent( );
+        float    GetClusterEnergy( );
         double   RnPoCutDeadTime( );
         double   BiPCutoDeadTime( );
         double   PileUpCutDeadTime( );
@@ -81,11 +81,12 @@ class Event {
         bool NeutronPulseCut    ( int PID );
         bool HeightCut          ( float height );
 	bool MuonEvent		( );
-        bool MuonAdjacentCut    ( int iEvent, std::vector<Event> *allEvents, float time );
-        bool PileUpCut          ( int iEvent, std::vector<Event> *allEvents, float time );
-        bool NeutronAdjacentCut ( int iEvent, std::vector<Event> *allEvents, float time, int PID );
-        bool RnPoDecayCut       ( int iEvent, std::vector<Event> *allEvents, float time, float height );
-        bool BiPoDecayCut       ( int iEvent, std::vector<Event> *allEvents, float time, float height );
+        bool MuonAdjacentCut    ( int iEvent, std::vector<Cluster> *allEvents, float time );
+        bool PileUpCut          ( int iEvent, std::vector<Cluster> *allEvents, float time );
+        bool NeutronAdjacentCut ( int iEvent, std::vector<Cluster> *allEvents, float time, int PID );
+        bool RnPoDecayCut       ( int iEvent, std::vector<Cluster> *allEvents, float time, float height );
+        bool BiPoDecayCut       ( int iEvent, std::vector<Cluster> *allEvents, float time, float height );
+
 };
 
 #endif 

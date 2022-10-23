@@ -1,4 +1,4 @@
-#include "event.hh"
+#include "cluster.hh"
 #include <cmath>
 
 using namespace std;
@@ -37,12 +37,12 @@ PSD_t PSD_per_energy[10] = {
 };
 
 
-double Event::_RnPoDeadTime = 0.0;
-double Event::_BiPoDeadTime = 0.0;
-double Event::_PileUpDeadTime = 0.0;
-double Event::_MuonAdjacentDeadTime = 0.0;
-double Event::_NeutronRecoilDeadTime = 0.0;
-double Event::_NeutronCaptureDeadTime = 0.0;
+double Cluster::_RnPoDeadTime = 0.0;
+double Cluster::_BiPoDeadTime = 0.0;
+double Cluster::_PileUpDeadTime = 0.0;
+double Cluster::_MuonAdjacentDeadTime = 0.0;
+double Cluster::_NeutronRecoilDeadTime = 0.0;
+double Cluster::_NeutronCaptureDeadTime = 0.0;
 
 
 /* class Pulse_t {{{ */
@@ -74,45 +74,45 @@ float Pulse_t::HeightDifference (Pulse_t *a){
 /* }}} */
 
 
-/* class Event {{{ */
+/* class Cluster {{{ */
 
-Event::Event(){
+Cluster::Cluster(){
     Initialize();
 }
 
-Event::~Event(){
+Cluster::~Cluster(){
     Initialize();
 }
 
-void Event::Initialize(){
+void Cluster::Initialize(){
     if (pulses.size()) pulses.clear();
-    energyEvent = 0.0;
+    clusterEnergy = 0.0;
 
     _hasNeutronRecoil = false;
     _hasNeutronCapture = false;
     _isGammaEvent = true;
 }
 
-int Event::GetNumberOfPulses(){
+int Cluster::GetNumberOfPulses(){
     return pulses.size();
 }
 
-float Event::GetEnergyEvent(){
-    return energyEvent;
+float Cluster::GetClusterEnergy(){
+    return clusterEnergy;
 }
 
-Pulse_t* Event::GetPulse(int iPulse){
+Pulse_t* Cluster::GetPulse(int iPulse){
     // Make sure that there will no segmentation fault
     assert (iPulse >= 0 && iPulse < this->GetNumberOfPulses());
 
     return &pulses.at(iPulse);
 }
 
-void Event::AddPulse(Pulse_t pulse){
+void Cluster::AddPulse(Pulse_t pulse){
     pulses.push_back(pulse);
 
     // Update energyEvent
-    energyEvent += pulse.energy;
+    clusterEnergy += pulse.energy;
 
     // Check if it is a beta decay
     _isGammaEvent = _isGammaEvent && pulse.PID == 1;
@@ -121,14 +121,16 @@ void Event::AddPulse(Pulse_t pulse){
     if (pulse.PID == 6) _hasNeutronCapture = true;
 }
 
-bool Event::MuonEvent() {
+
+bool Cluster::MuonEvent() {
 	if (energyEvent > 15) { _isMuonEvent = true;
 	return _isMuonEvent; }
 	else {return false; 
 	}
 	}
 
-int Event::isSinglePulse(){
+int Cluster::isSinglePulse(){
+
     /* Determine if the event is a single pulse
      * 
      * Return:
@@ -142,19 +144,19 @@ int Event::isSinglePulse(){
     else return pulses.at(0).PID;
 }
 
-bool Event::hasNeutronRecoil(){
+bool Cluster::hasNeutronRecoil(){
     return _hasNeutronRecoil;
 }
 
-bool Event::hasNeutronCapture(){
+bool Cluster::hasNeutronCapture(){
     return _hasNeutronCapture;
 }
 
-bool Event::isBetaDecayEvent(){
+bool Cluster::isBetaDecayEvent(){
     return _isGammaEvent && this->isSinglePulse() == 0;
 }
 
-bool Event::FiducialCut (){
+bool Cluster::FiducialCut (){
     int segment = this->GetPulse(0)->segment;
     
     int segX = segment % 14,
@@ -163,11 +165,11 @@ bool Event::FiducialCut (){
     return ((segX >= 2 && segX <= 11) && (segY >= 3 && segY <= 8));
 }
 
-bool Event::HeightCut (float height){
+bool Cluster::HeightCut (float height){
     return abs(this->GetPulse(0)->height) < height;
 }
 
-bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float time){
+bool Cluster::MuonAdjacentCut (int iEvent, std::vector<Cluster> *allEvents, float time){
     /* Check if here is a muon event adjacent to the pulse within a certain time interval
      * @param:
      *        - iEvent: index of the current event
@@ -182,10 +184,10 @@ bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float ti
     bool prevEvent = true;
     for (long int iPrev = iEvent - 1; iPrev >= 0; iPrev--){
         
-        Event *temp = &allEvents->at(iPrev);
+        Cluster *temp = &allEvents->at(iPrev);
 
         // Energy requirement
-        if (temp->GetEnergyEvent() > 15){
+        if (temp->GetClusterEnergy() > 15){
 
             prevEvent =
                 this->GetPulse(0)->TimeWindow(temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
@@ -198,10 +200,10 @@ bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float ti
     bool nextEvent = true;
     for (long int iNext = iEvent + 1, iMax = allEvents->size(); iNext < iMax; iNext++){
 
-        Event *temp = &allEvents->at(iNext);
+        Cluster *temp = &allEvents->at(iNext);
 
         // Energy requirement
-        if (temp->GetEnergyEvent() > 15){
+        if (temp->GetClusterEnergy() > 15){
 
             nextEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(0)) > time;
 
@@ -216,7 +218,7 @@ bool Event::MuonAdjacentCut (int iEvent, std::vector<Event> *allEvents, float ti
     return returnValue;
 }
 
-bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
+bool Cluster::PileUpCut(int iEvent, std::vector<Cluster> *allEvents, float time){
     /* Check if there is any event within @time microseconds
      * @param:
      *        - iEvent: index of the current event in @allEvents
@@ -230,7 +232,7 @@ bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
     bool prevEvent = true;
 
     if (iPrev > -1){
-        Event *temp = &allEvents->at(iPrev);
+        Cluster *temp = &allEvents->at(iPrev);
 
         prevEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(temp->GetNumberOfPulses() - 1)) > time;
     }
@@ -240,7 +242,7 @@ bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
     bool nextEvent = true;
 
     if ( iNext < allEvents->size( ) ){
-        Event *temp = &allEvents->at(iNext);
+        Cluster *temp = &allEvents->at(iNext);
 
         nextEvent = this->GetPulse(0)->TimeWindow(temp->GetPulse(0)) > time;
     }
@@ -253,7 +255,7 @@ bool Event::PileUpCut(int iEvent, std::vector<Event> *allEvents, float time){
 }
 
 
-bool Event::NeutronAdjacentCut (int iEvent, std::vector<Event> *allEvents, float time, int PID){
+bool Cluster::NeutronAdjacentCut (int iEvent, std::vector<Cluster> *allEvents, float time, int PID){
     /* Check if there is a neutron event adjacent to the pulse within certain time interval 
      *
      * @param:
@@ -269,7 +271,7 @@ bool Event::NeutronAdjacentCut (int iEvent, std::vector<Event> *allEvents, float
     bool prevEvent = true;
     for (long int iPrev = iEvent - 1 ; iPrev >= 0; iPrev--){
         
-        Event *temp = &allEvents->at(iPrev);
+        Cluster *temp = &allEvents->at(iPrev);
 
         if (PID == 4){
             // Looking for event containing neutron recoil
@@ -297,7 +299,7 @@ bool Event::NeutronAdjacentCut (int iEvent, std::vector<Event> *allEvents, float
     bool nextEvent = true;
     for (long int iNext = iEvent + 1, iMax = allEvents->size(); iNext < iMax; iNext++){
 
-        Event *temp = &allEvents->at(iNext);
+        Cluster *temp = &allEvents->at(iNext);
 
         if (PID == 4){
             // Looking for event containing neutron recoil
@@ -327,13 +329,13 @@ bool Event::NeutronAdjacentCut (int iEvent, std::vector<Event> *allEvents, float
     return returnValue;
 }
 
-bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, float height){
+bool Cluster::RnPoDecayCut(int iEvent, std::vector<Cluster> *allEvents, float time, float height){
 
     Pulse_t *signalCandidate = this->GetPulse(0);
     
     bool prevEvent = true;
     for (long int iPrev = iEvent - 1; iPrev >= 0; iPrev--){
-        Event *temp = &allEvents->at(iPrev);
+        Cluster *temp = &allEvents->at(iPrev);
 
         // single pulse neutron recoil
         if ( temp->isSinglePulse( ) == 4 ){
@@ -352,7 +354,7 @@ bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, 
 
     bool nextEvent = true;
     for (long int iNext = iEvent + 1, iMax = allEvents->size(); iNext < iMax; iNext++){
-        Event *temp = &allEvents->at(iNext);
+        Cluster *temp = &allEvents->at(iNext);
 
         // single pulse neutron recoil
         if (temp->isSinglePulse ( ) == 4){
@@ -375,7 +377,7 @@ bool Event::RnPoDecayCut(int iEvent, std::vector<Event> *allEvents, float time, 
 }
 
 
-bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, float time, float height ){
+bool Cluster::BiPoDecayCut( int iEvent, std::vector<Cluster> *allEvents, float time, float height ){
     Pulse_t* signalCandidate = this->GetPulse(0);
     
     bool prevEvent = true,
@@ -384,9 +386,9 @@ bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, float time,
     for ( long int iPrev = iEvent - 1; iPrev >= 0; iPrev-- ){
         if ( foundRequiredPulse ) break;
 
-        Event *temp = &allEvents->at( iPrev );
+        Cluster *temp = &allEvents->at( iPrev );
 
-        if ( temp->GetEnergyEvent() >= 0.25 && temp->GetEnergyEvent() < 3.25 && // Energy restriction
+        if ( temp->GetClusterEnergy() >= 0.25 && temp->GetClusterEnergy() < 3.25 && // Energy restriction
             temp->isBetaDecayEvent() ){                                         // Beta decay only
 
             for ( int iPulse = 0, nbPulses = temp->GetNumberOfPulses(); iPulse < nbPulses; iPulse++ ){
@@ -422,15 +424,15 @@ bool Event::BiPoDecayCut( int iEvent, std::vector<Event> *allEvents, float time,
     return prevEvent;
 }
 
-bool Event::SinglePulseCut( ){ return this->isSinglePulse() != 0; }
+bool Cluster::SinglePulseCut( ){ return this->isSinglePulse() != 0; }
 
-bool Event::NeutronPulseCut( int PID ){
+bool Cluster::NeutronPulseCut( int PID ){
 
     assert ( PID == 4 || PID == 6 );
 
     if ( !this->SinglePulseCut( ) ) return false;
 
-    float energyEvent = this->GetEnergyEvent( );
+    float energyEvent = this->GetClusterEnergy( );
 
     int iHist = -1;
     if ( energyEvent < 10 && energyEvent >= 0.5 ) iHist = (int) energyEvent;
@@ -451,11 +453,11 @@ bool Event::NeutronPulseCut( int PID ){
 }
 
 // DO NOT USE THESE FUNCTION
-double Event::RnPoCutDeadTime()           { return _RnPoDeadTime; }
-double Event::BiPCutoDeadTime()           { return _BiPoDeadTime; }
-double Event::PileUpCutDeadTime()         { return _PileUpDeadTime; }
-double Event::MuonAdjacentCutDeadTime()   { return _MuonAdjacentDeadTime; }
-double Event::NeutronRecoilCutDeadTime()  { return _NeutronRecoilDeadTime; }
-double Event::NeutronCaptureCutDeadTime() { return _NeutronCaptureDeadTime; }
+double Cluster::RnPoCutDeadTime()           { return _RnPoDeadTime; }
+double Cluster::BiPCutoDeadTime()           { return _BiPoDeadTime; }
+double Cluster::PileUpCutDeadTime()         { return _PileUpDeadTime; }
+double Cluster::MuonAdjacentCutDeadTime()   { return _MuonAdjacentDeadTime; }
+double Cluster::NeutronRecoilCutDeadTime()  { return _NeutronRecoilDeadTime; }
+double Cluster::NeutronCaptureCutDeadTime() { return _NeutronCaptureDeadTime; }
 
 /* }}} */
