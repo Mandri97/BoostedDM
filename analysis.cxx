@@ -8,14 +8,14 @@
 #include <TBranch.h>
 #include <TH1.h>
 #include <TH2.h>
-
+#include <TVectorT.h>
 
 #include "event.hh"
 
 
-#define NBIN_ENERGY 50
-#define MIN_ENERGY 0
-#define MAX_ENERGY 10
+#define NBIN_ENERGY 1970
+#define MIN_ENERGY 15
+#define MAX_ENERGY 1000
 
 #define NBIN_SEGMENT 154
 #define MIN_SEGMENT 0
@@ -41,6 +41,7 @@ void CutEvents (vector<Event> *events);
 
 /* Histograms {{{ */
 auto hEnergyPerEvent    = new TH1F("hEnergyPerEvent",   "All events",                                          NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hMuonEvent         = new TH1F("hMuonEvent",        "Muon event;Energy (MeV);Count",                    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hSinglePulseEvent  = new TH1F("hSinglePulseEvent", "Single Pulse",                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hSignalCandidate   = new TH1F("hSignalCandidate",  "Signal candidate",                                    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
 auto hFiducialization   = new TH1F("hFiducialization",  "Segment-z double fiducial cut",                       NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
@@ -67,6 +68,7 @@ auto hLiveSegmentSignal1  = new TH1F("hLiveSegmentSignal1",  "", NBIN_SEGMENT, M
 auto hLiveSegmentNeutron  = new TH1F("hLiveSegmentNeutron",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 auto hLiveSegmentPileUp   = new TH1F("hLiveSegmentPileUp",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
 
+TVectorT<double> *runtime;
 
 /* }}} */
 
@@ -192,6 +194,10 @@ void analyzeRootFile(string rootFile){
 
     events->clear( );
 
+ // Save runtime
+    runtime = (TVectorT<double>*) _file->Get("runtime");     
+    abstime = (TVectorT<double>*) _file->Get("abstime");
+
     _file->Close( );
 }
 
@@ -210,27 +216,8 @@ void analysis(char* filename, char* outname){ // {{{
     auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
     // Save histogram
-    hPileUp->Write();
-    hRnPoDecay->Write();
-    hBiPoDecay->Write();
-    hLiveSegment->Write();
-    hMuonAdjacent->Write();
-    hNeutronRecoil->Write();
-    hEnergyPerEvent->Write();
-    hNeutronCapture->Write();
-    hFiducialization->Write();
-    hSignalCandidate->Write();
-    hSinglePulseEvent->Write();
-    hLiveSegmentPileUp->Write();
-    hPulseCandidatePSD->Write();
-    hLiveSegmentSignal->Write();
-    hLiveSegmentSignal0->Write();
-    hLiveSegmentSignal1->Write();
-    hLiveSegmentNeutron->Write();
-    hLiveSegmentFiducial->Write();
-
-    hPulseCandidateCustomPSD->Write();
-    hPulseCandidateDefaultPSD->Write();
+    hMuonEvent->Write();
+    runtime->Write("runtime");
 
     //for (int i = 0; i < 10; i++) hist_PSD_Energy[i]->Write();
 
@@ -240,34 +227,18 @@ void analysis(char* filename, char* outname){ // {{{
 } //}}}
 
 
-void CutEvents (vector<Event> *events){ // {{{
+void CutEvents (vector<Event> *events){ 
     for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
         Event *event = &events->at(iEvent);
 
         float energyEvent = event->GetEnergyEvent();
 
         hEnergyPerEvent->Fill( energyEvent );
-
-        if ( event->SinglePulseCut( ) )                                           { hSinglePulseEvent->Fill(energyEvent);
-        if ( event->NeutronPulseCut( 4 ) || event->NeutronPulseCut( 6 ) )         { hSignalCandidate->Fill( energyEvent );
-                                                                                    hLiveSegmentNeutron->Fill( event->GetPulse( 0 )->segment );
-        if ( event->FiducialCut() && abs ( event->GetPulse( 0 )->height )  < 200 ){ hFiducialization->Fill( energyEvent );
-                                                                                    hLiveSegmentFiducial->Fill( event->GetPulse( 0 )->segment );
-        if ( event->MuonAdjacentCut( iEvent, events, 5 ) )                        { hMuonAdjacent->Fill( energyEvent );
-        if ( event->NeutronAdjacentCut( iEvent, events, 5, 4 ) )                  { hNeutronRecoil->Fill( energyEvent );
-        if ( event->NeutronAdjacentCut( iEvent, events, 1000, 6 ) )               { hNeutronCapture->Fill( energyEvent );
-        if ( event->PileUpCut( iEvent, events, 4 ) )                              { hPileUp->Fill( energyEvent );
-                                                                                    hLiveSegmentPileUp->Fill( event->GetPulse( 0 )->segment );
-        if ( event->RnPoDecayCut( iEvent, events, 15000, 250 ) )                  { hRnPoDecay->Fill( energyEvent );
-        if ( event->BiPoDecayCut( iEvent, events, 1200, 250 ) )                   { hBiPoDecay->Fill( energyEvent );
-                                                                                    hLiveSegmentSignal->Fill ( event->GetPulse( 0 )->segment );
-                                                                                    if (energyEvent >= 1) hLiveSegmentSignal1->Fill ( event->GetPulse( 0 )->segment );
-                                                                                    else if (energyEvent >= 0.7) hLiveSegmentSignal0->Fill ( event->GetPulse( 0 )->segment );
-
-
-            }}}}}}}}}}
-} // }}}
-
+	
+	if ( event->MuonEvent( ) )						  { hMuonEvent->Fill(energyEvent);
+}
+} 
+}
 
 
 

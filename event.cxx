@@ -15,6 +15,13 @@ struct PSD_t {
                  nLiBand;
 };
 
+//pulse.segEnergeticPulse = 0;
+//pulse.MaxEvent = 0;
+//if (pulse.Event > pulse.MaxEvent){
+//	pulse.MaxEvent = pulse.Event;
+//	pulse.segEnergeticPulse = Pulse_t.seg;
+//}
+
 // Single pulse + Height (55 cm) + PileUp 2 us
 PSD_t PSD_per_energy[10] = {
     { {0.1444, 0.01403}, {0.2429, 0.02336}, {0.2638, 0.01653} },       // Energy: 0.7 - 1 MeV
@@ -113,6 +120,13 @@ void Event::AddPulse(Pulse_t pulse){
     if (pulse.PID == 4) _hasNeutronRecoil = true;
     if (pulse.PID == 6) _hasNeutronCapture = true;
 }
+
+bool Event::MuonEvent() {
+	if (energyEvent > 15) { _isMuonEvent = true;
+	return _isMuonEvent; }
+	else {return false; 
+	}
+	}
 
 int Event::isSinglePulse(){
     /* Determine if the event is a single pulse

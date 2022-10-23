@@ -1,11 +1,14 @@
 #include <iostream>
 #include <fstream>
 
+#define THRESHOLD 2
+#include <assert.h>
 #include <TH1F.h>
 #include <TFile.h>
 #include <TGraph.h>
 #include <TCanvas.h>
 #include <TVectorT.h>
+#include <TMultiGraph.h>
 
 using namespace std;
 
@@ -22,8 +25,12 @@ void FILE_NOT_FOUND(const char *filename){
 void plotRate(char* filename){
     // Create a graph 
     TGraph *graph = new TGraph();
-    
+    //auto *mg = new TMultiGraph();
+    //auto *graph1 = new TGraph();
+    //auto *graph2 = new TGraph();
+
     int fileCounter = 1;
+    double previousrate = 550;
 
     // Open txt file
     ifstream _inFile;
@@ -37,17 +44,23 @@ void plotRate(char* filename){
         if (_rootfile->IsZombie()) FILE_NOT_FOUND(line.c_str());
 
         // Get histogram
-        auto hEnergySelectedEvents = (TH1D*)_rootfile->Get("hEnergyPerEvent");
+        auto hEnergySelectedEvents = (TH1D*)_rootfile->Get("hMuonEvent");
+     	assert(hEnergySelectedEvents != nullptr);
 
         // Get runtime
         double runtime  = ((TVectorT<double> *) _rootfile->Get("runtime"))->Max();
         double binWidth = hEnergySelectedEvents->GetBinWidth(1);
-        double aliveSeg = 126;
 
-        double scaling = 1 / (runtime * binWidth * aliveSeg * 24.2);
+        double scaling = 1 / (runtime);
 
         hEnergySelectedEvents->Scale(scaling);
 
+	//bool i
+	
+	//bool spike(x,y){
+	//	return 
+	//} 
+	
         // Integration start and end energy
         double startEnergy = 15;
         double endEnergy = 50;
@@ -58,12 +71,16 @@ void plotRate(char* filename){
         binMax = (binMax > hEnergySelectedEvents->GetNbinsX()) ? hEnergySelectedEvents->GetNbinsX() : binMax;
 
         // Integrate
-        double rate = hEnergySelectedEvents->Integral(binMin, binMax, "width");
-
-        graph->SetPoint(fileCounter -1, fileCounter, rate);
-        
+        double rate = hEnergySelectedEvents->Integral(binMin, binMax);
+	if( (fileCounter > 0) && (rate - previousrate > THRESHOLD) ) {
+	cout << fileCounter << endl;
+	}
+	graph->SetPoint(fileCounter -1, fileCounter, rate); //change to runtime
+        //graph->SetPoint(fileCounter -1, fileCounter, runtime);
+ 	//cout << runtime << endl;	
         fileCounter++;
 
+	previousrate = rate;
         // Close file to avoid memory leak
         _rootfile->Close();
     }
@@ -71,8 +88,12 @@ void plotRate(char* filename){
     _inFile.close();
 
     TCanvas *c = new TCanvas("c", "", 800, 500);
+    graph->SetTitle("Runtime as a function of run iteration");
+    graph->GetYaxis()->SetTitle("Runtime (seconds)");
+    graph->GetXaxis()->SetTitle("Run iteration");
+    graph->SetLineColor(kRed);
     graph->Draw();
-    c->SaveAs("RateMuon.pdf");
+    c->SaveAs("Runtime.pdf");
 }
 
 int main(int argc, char* argv[]){

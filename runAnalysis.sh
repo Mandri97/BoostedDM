@@ -5,7 +5,7 @@ function readTxtFile() {
 	FILELIST=$1
 
     # TODO: Specify where the PBS script is
-    PBS_SCRIPT=$HOME/work/BoostedDM/FinalPlot/runAnalysis.pbs
+    PBS_SCRIPT=$HOME/BoostedDM/runAnalysis.pbs
 
 	while read CMD; do
         echo "Submiting job $counter - Analysis of $CMD ..."
@@ -14,7 +14,7 @@ function readTxtFile() {
 		counter=$((counter + 1))
 
 		if (( $counter % 11 == 0)); then
-			sleep 200
+			sleep 60
 			counter=0
 		fi
 	done < "$FILELIST"
@@ -73,24 +73,15 @@ fi
 CONF_="n"
 ANALYSIS_=10
 
-while [ "$CONF_" != "y" ]; do
-    echo "What kind of analysis would you like to do?"
-    echo "(1) - Analyzing files"
-    echo "(2) - Get runtime"
-    read ANALYSIS_
-    echo "Confirming ($ANALYSIS_) based analysis ? (y/n)"
-    read CONF_
-done
-
 LISTOFFILES=$1
 
+readTxtFile "${LISTOFFILES}" $2
 # Calling function
-if [ $ANALYSIS_ -eq 1 ]; then
-    readTxtFile "${LISTOFFILES}" $2
-elif [ $ANALYSIS_ -eq 2 ]; then
+#if [ $ANALYSIS_ -eq 1 ]; then
+#elif [ $ANALYSIS_ -eq 2 ]; then
     # Overwrite outputfile
-    rm -f $2/runtimeCheck.txt
+#    rm -f $2/runtimeCheck.txt
 
-    checkLiveTime "${LISTOFFILES}" $2
-fi
+#    checkLiveTime "${LISTOFFILES}" $2
+#fi
 

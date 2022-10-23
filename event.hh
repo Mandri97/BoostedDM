@@ -36,7 +36,8 @@ class Event {
 
         bool _hasNeutronRecoil,
              _hasNeutronCapture,
-             _isGammaEvent;
+             _isGammaEvent,
+	     _isMuonEvent;
 
         // Dead Time
         double static _RnPoDeadTime,
@@ -79,6 +80,7 @@ class Event {
         bool SinglePulseCut     ( );
         bool NeutronPulseCut    ( int PID );
         bool HeightCut          ( float height );
+	bool MuonEvent		( );
         bool MuonAdjacentCut    ( int iEvent, std::vector<Event> *allEvents, float time );
         bool PileUpCut          ( int iEvent, std::vector<Event> *allEvents, float time );
         bool NeutronAdjacentCut ( int iEvent, std::vector<Event> *allEvents, float time, int PID );
