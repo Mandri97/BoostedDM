@@ -13,10 +13,58 @@
 
 #include "cluster.hh"
 
+#define NBIN_ENERGY 1970
+#define MIN_ENERGY 15
+#define MAX_ENERGY 1000
+
+#define NBIN_SEGMENT 154
+#define MIN_SEGMENT 0
+#define MAX_SEGMENT 154
+
 #define MUON_ANALYSIS 1
 #define BDM_ANALYSIS 0
 
 using namespace std;
+
+/* Consider each root file separately */
+void analysis (char* filename, char* outname);
+
+
+/* Analyze root file */
+void analyzeRootFile (string rootFile);
+
+void CutEvents (vector<Cluster> *events);
+
+/* Histograms */
+auto hEnergyPerEvent    = new TH1F("hEnergyPerEvent",   "All events",                                          NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hMuonEvent         = new TH1F("hMuonEvent",        "Muon event;Energy (MeV);Count",                    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hSinglePulseEvent  = new TH1F("hSinglePulseEvent", "Single Pulse",                                        NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hSignalCandidate   = new TH1F("hSignalCandidate",  "Signal candidate",                                    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hFiducialization   = new TH1F("hFiducialization",  "Segment-z double fiducial cut",                       NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hMuonAdjacent      = new TH1F("hMuonAdjacent",     "Muon Adjacent veto, #pm 5 #mus",                      NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hNeutronRecoil     = new TH1F("hNeutronRecoil",    "Neutron recoil veto, #pm 5 #mus",                     NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hNeutronCapture    = new TH1F("hNeutronCapture",   "NLi capture veto, #pm 1000 #mus",                     NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hRnPoDecay         = new TH1F("hRnPoDecay",        "Rn-Po correlated decay (#pm 25 cm & #pm 15000 #mus)", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hBiPoDecay         = new TH1F("hBiPoDecay",        "Bi-Po correlated decay (#pm 25 cm & - 1200 #mus)",    NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hPileUp            = new TH1F("hPileUp",           "Pile Up veto, #pm 4 ns",                              NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hPulseCandidatePSD = new TH1F("hPulseCandidatePSD","PSD value", 200, 0, 0.5);
+
+auto hPulseCandidateDefaultPSD = new TH1F("hPulseCandidateDefaultPSD", "Potential signals using default PSD", NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+auto hPulseCandidateCustomPSD  = new TH1F("hPulseCandidateCustomPSD",  "Potential signals using custom PSD",  NBIN_ENERGY, MIN_ENERGY, MAX_ENERGY);
+
+// TODO: Change cuts before filling this histogram
+TH1F* hist_PSD_Energy[10];
+
+// count
+auto hLiveSegment         = new TH1F("hLiveSegment",         "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentFiducial = new TH1F("hLiveSegmentFiducial", "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal   = new TH1F("hLiveSegmentSignal",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal0  = new TH1F("hLiveSegmentSignal0",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentSignal1  = new TH1F("hLiveSegmentSignal1",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentNeutron  = new TH1F("hLiveSegmentNeutron",  "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+auto hLiveSegmentPileUp   = new TH1F("hLiveSegmentPileUp",   "", NBIN_SEGMENT, MIN_SEGMENT, MAX_SEGMENT);
+
+ TVectorT<double> *runtime;
  
 // Argument requirement to launch the program
 inline void helper (char *prgramName);
@@ -60,13 +108,14 @@ int main(int argc, char* argv[]){
     // Retrieve raw data
     auto tree = (TTree*)_inFile->Get("PhysPulse");
 
+    // Combine pulse into cluster
+    ParsePhyPulse(tree, events);
+
     if (tree == NULL){
 	    _inFile->Close();
 	    return -1;
     }
 
-    // Combine pulses into cluster
-    ParsePhysPulse(tree, events);
 
     // Prevent memory issues
     auto _outFile = new TFile(Form("%s.root", argv[2]), "recreate");
@@ -235,18 +284,18 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
         oneEvent.AddPulse(pulse);
     }
 
+    p_events->push_back(oneEvent);
 
-    CutEvents( events );
+    CutEvents(p_events);
 
-    events->clear( );
+    p_events->clear( );
 
  // Save runtime
-    runtime = (TVectorT<double>*) _file->Get("runtime");     
-    abstime = (TVectorT<double>*) _file->Get("abstime");
+    auto runtime = (TVectorT<double>*) _inFile->Get("runtime");     
+    auto abstime = (TVectorT<double>*) _inFile->Get("abstime");
 
-    _file->Close( );
+    _inFile->Close( );
 
-    p_events->push_back(oneEvent);
 }
 
 inline void helper(char *programName){
@@ -259,7 +308,7 @@ void analysis(char* filename, char* outname){ // {{{
     // Consider root file separately
     //while (textFile >> oneRootFile) 
     analyzeRootFile( string( filename ) );
-
+  
     auto outFile = new TFile(Form("%s.root", outname), "recreate");
 
     // Save histogram
@@ -274,11 +323,11 @@ void analysis(char* filename, char* outname){ // {{{
 } //}}}
 
 
-void CutEvents (vector<Event> *events){ 
+void CutEvents (vector<Cluster> *events){ 
     for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
-        Event *event = &events->at(iEvent);
+        Cluster *event = &events->at(iEvent);
 
-        float energyEvent = event->GetEnergyEvent();
+        float energyEvent = event->GetClusterEnergy();
 
         hEnergyPerEvent->Fill( energyEvent );
 	
