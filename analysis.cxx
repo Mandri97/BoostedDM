@@ -84,6 +84,8 @@ int main(int argc, char* argv[]){
     selectedEvts->Branch("seg", &c_segment);
     selectedEvts->Branch("t",   &c_time);
 
+    bool f_RegisterEvent = false;
+
     // Remove background
     for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
         Cluster *event = &events->at(iEvent);
@@ -97,6 +99,8 @@ int main(int argc, char* argv[]){
             // TODO: Assign the correct segment and time of the event
             c_segment = 0;
             c_time = 0;
+
+            f_RegisterEvent = true;
         }
 #endif
 
@@ -136,10 +140,15 @@ int main(int argc, char* argv[]){
                                         
         if (event->BiPoDecayCut(iEvent, events, 1200, 250)){
             // DO SOMETHING
+
+            f_RegisterEvent = true;
         } else continue;
 #endif
 
-        selectedEvts->Fill();
+        if (f_RegisterEvent){
+            selectedEvts->Fill();
+            f_RegisterEvent = false;
+        }
     }
 
     cout << " done.\n";
