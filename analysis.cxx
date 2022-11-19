@@ -217,7 +217,7 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
             lastEventID = t_event;
             sameEvent = true;
         }else{
-            if ( t_dtime > 20 ) sameEvent = false;
+            if ( false ) sameEvent = false;
             else sameEvent = lastEventID == t_event;
 
             lastEventID = t_event;
