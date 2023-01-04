@@ -14,7 +14,6 @@
 #include "cluster.hh"
 
 #define MUON_ANALYSIS 1
-#define BDM_ANALYSIS 0
 
 using namespace std;
  
@@ -193,6 +192,7 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
 
     // memory for event
     Long64_t lastEventID = 0;
+    double prevTime = 0.0;
 
     Cluster oneEvent;
 
@@ -215,12 +215,19 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
 
         if (!ientry){
             lastEventID = t_event;
+            prevTime = t_time;
+
             sameEvent = true;
         }else{
+            /*
             if ( false ) sameEvent = false;
             else sameEvent = lastEventID == t_event;
 
             lastEventID = t_event;
+            */
+            sameEvent = t_time - prevTime < 20;
+
+            prevTime = t_time;
         }
 
         // Store the previous event
