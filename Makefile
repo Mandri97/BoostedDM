@@ -3,7 +3,7 @@ CXX=g++
 LDLIBS=`root-config --libs`
 CPPFLAGS=`root-config --cflags`
 
-CPPFLAGS += -Wall -std=c++11 -O3
+CPPFLAGS += -Wall -std=c++17 -O3
 
 all: analysis
 	@echo Compiling finished.

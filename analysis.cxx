@@ -15,13 +15,15 @@
 
 #define MUON_ANALYSIS 1
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
  
 // Argument requirement to launch the program
 inline void helper (char *prgramName);
 
 // Combining pulses into cluster 
-void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_cluster);
+void ParsePhysPulse(TTree &p_tree, vector<Cluster> &p_cluster);
 
 int main(int argc, char* argv[]){
     // Check for argument 
@@ -54,7 +56,7 @@ int main(int argc, char* argv[]){
     cout << "Processing " << argv[1] << " ...";
 
     // Create variable to contains all events
-    vector<Cluster> *events = new vector<Cluster>;
+    vector<Cluster> events;
 
     // Retrieve raw data
     auto tree = (TTree*)_inFile->Get("PhysPulse");
@@ -65,7 +67,7 @@ int main(int argc, char* argv[]){
     }
 
     // Combine pulses into cluster
-    ParsePhysPulse(tree, events);
+    ParsePhysPulse(*tree, events);
 
     // Prevent memory issues
     auto _outFile = new TFile(Form("%s.root", argv[2]), "recreate");
@@ -86,8 +88,8 @@ int main(int argc, char* argv[]){
     bool f_RegisterEvent = false;
 
     // Remove background
-    for (long int iEvent = 0, iMax = events->size(); iEvent < iMax; iEvent++){
-        Cluster *event = &events->at(iEvent);
+    for (long int iEvent = 0, iMax = events.size(); iEvent < iMax; iEvent++){
+        Cluster *event = &events.at(iEvent);
 
         float energyEvent = event->GetClusterEnergy();
 
@@ -160,14 +162,14 @@ int main(int argc, char* argv[]){
     runtime->Write("runtime");
 
     // Free memory
-    events->clear();
+    events.clear();
     _inFile->Close();
     _outFile->Close();
 
     return 0;
 }
 
-void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
+void ParsePhysPulse(TTree &p_tree, vector<Cluster> &p_events){
     // Declare variables for branches 
     Long64_t t_event;           // Keep track of events
     int      t_PID,             // PID
@@ -179,16 +181,16 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
     double   t_time;            // absolute time [ns]
 
     // Set branch address 
-    p_tree->SetBranchAddress("evt",  &t_event);
-    p_tree->SetBranchAddress("PID",  &t_PID);
-    p_tree->SetBranchAddress("seg",  &t_segment);
-    p_tree->SetBranchAddress("PSD",  &t_PSD);
-    p_tree->SetBranchAddress("E",    &t_energy);
-    p_tree->SetBranchAddress("z",    &t_height);
-    p_tree->SetBranchAddress("t",    &t_time);
-    p_tree->SetBranchAddress("dt",   &t_dtime);
+    p_tree.SetBranchAddress("evt",  &t_event);
+    p_tree.SetBranchAddress("PID",  &t_PID);
+    p_tree.SetBranchAddress("seg",  &t_segment);
+    p_tree.SetBranchAddress("PSD",  &t_PSD);
+    p_tree.SetBranchAddress("E",    &t_energy);
+    p_tree.SetBranchAddress("z",    &t_height);
+    p_tree.SetBranchAddress("t",    &t_time);
+    p_tree.SetBranchAddress("dt",   &t_dtime);
 
-    long int nentries = p_tree->GetEntries();
+    long int nentries = p_tree.GetEntries();
 
     // memory for event
     Long64_t lastEventID = 0;
@@ -198,7 +200,7 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
 
     // Loop over all events -- Store
     for (long int ientry = 0; ientry < nentries; ientry++){
-        p_tree->GetEntry(ientry);
+        p_tree.GetEntry(ientry);
 
         // Exclude data from these segments
         switch(t_segment){
@@ -232,7 +234,7 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
 
         // Store the previous event
         if ( !sameEvent && oneEvent.GetNumberOfPulses() ){
-            p_events->push_back(oneEvent);
+            p_events.push_back(oneEvent);
             
             // reset
             oneEvent.Initialize();
@@ -251,11 +253,9 @@ void ParsePhysPulse(TTree* p_tree, vector<Cluster>* p_events){
         oneEvent.AddPulse(pulse);
     }
 
-    p_events->push_back(oneEvent);
+    p_events.push_back(oneEvent);
 }
 
 inline void helper(char *programName){
     cout << "\tUsage: " << programName << " filename output\n" << endl;
 }
-
-
